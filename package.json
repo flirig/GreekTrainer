@@ -1,0 +1,21 @@
+{
+  "name": "greek-trainer",
+  "version": "1.0.0",
+  "description": "Greek language learning trainer with database support",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "db:init": "node server/db/init.js"
+  },
+  "keywords": ["greek", "language", "learning", "trainer"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  }
+}

@@ -1,0 +1,97 @@
+export const SCHEMA = `
+CREATE TABLE IF NOT EXISTS phrases (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  el TEXT NOT NULL UNIQUE,
+  ru TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS accent_variants (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  phrase_id INTEGER NOT NULL,
+  variant TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (phrase_id) REFERENCES phrases(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS mistakes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  phrase_id INTEGER NOT NULL,
+  variant TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (phrase_id) REFERENCES phrases(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS stories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  description TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS story_sentences (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  story_id INTEGER NOT NULL,
+  el TEXT NOT NULL,
+  ru TEXT NOT NULL,
+  order_index INTEGER NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (story_id) REFERENCES stories(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS user_progress (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT NOT NULL,
+  phrase_id INTEGER,
+  exercise_type TEXT,
+  is_correct INTEGER,
+  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (phrase_id) REFERENCES phrases(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_progress_user_id ON user_progress(user_id);
+CREATE INDEX IF NOT EXISTS idx_accent_variants_phrase_id ON accent_variants(phrase_id);
+CREATE INDEX IF NOT EXISTS idx_mistakes_phrase_id ON mistakes(phrase_id);
+CREATE INDEX IF NOT EXISTS idx_story_sentences_story_id ON story_sentences(story_id);
+`;
+
+export const INITIAL_DATA = [
+  {
+    el: "δίπλα στην πλατεία",
+    ru: "рядом с площадью",
+    accents: ["διπλά στην πλατεία", "δίπλα στήν πλατεία", "δίπλα στην πλατεια"],
+    mistakes: ["δίπλα στο πλατεία", "δίπλα στην πλατία", "δείπλα στην πλατεία"]
+  },
+  {
+    el: "περνάω από την πλατεία",
+    ru: "прохожу через / мимо площади",
+    accents: ["περναώ από την πλατεία", "περνάω απο τήν πλατεία", "περνάω άπο την πλατεία"],
+    mistakes: ["περνάω από τον πλατεία", "περνάω απο την πλατία", "περναω από την πλατεία"]
+  },
+  {
+    el: "μερικές φορές πάω στο μουσείο",
+    ru: "иногда я хожу в музей",
+    accents: ["μερικες φόρες πάω στο μουσείο", "μερικές φορές παώ στο μουσείο", "μερικές φορές πάω στό μουσείο"],
+    mistakes: ["μερικές φορές πάω στη μουσείο", "μερικές φωρές πάω στο μουσείο", "μερικές φορές πάω στο μουσίο"]
+  },
+  {
+    el: "στέλνω γράμματα στο ταχυδρομείο",
+    ru: "отправляю письма на почте",
+    accents: ["στελνώ γράμματα στο ταχυδρομείο", "στέλνω γραμμάτα στο ταχυδρομείο", "στέλνω γράμματα στό ταχυδρομείο"],
+    mistakes: ["στέλνω γράματα στο ταχυδρομείο", "στέλνω γράμματα στη ταχυδρομείο", "σταίλνω γράμματα στο ταχυδρομείο"]
+  },
+  {
+    el: "ζητώ κατεύθυνση για το νοσοκομείο",
+    ru: "спрашиваю дорогу к больнице",
+    accents: ["ζήτω κατεύθυνση για το νοσοκομείο", "ζητώ κατευθύνση για το νοσοκομείο", "ζητώ κατεύθυνση γιά το νοσοκομείο"],
+    mistakes: ["ζητώ κατεύθηνση για το νοσοκομείο", "ζητώ κατεύθυνση για τη νοσοκομείο", "ζιτώ κατεύθυνση για το νοσοκομείο"]
+  },
+  {
+    el: "είμαι απογοητευμένος από τη δουλειά",
+    ru: "я разочарован в работе",
+    accents: ["ειμαί απογοητευμένος από τη δουλειά", "είμαι απογοητευμενος άπο τη δουλειά", "είμαι απογοητευμένος από τή δουλειά"],
+    mistakes: ["είμαι απογοητευμένος από το δουλειά", "είμε απογοητευμένος από τη δουλειά", "είμαι απογοητευμένος από τη δουλειάς"]
+  }
+];

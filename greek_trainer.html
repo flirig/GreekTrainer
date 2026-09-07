@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Греческий тренажер: PRO MAX</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; color: #2c3e50; font-size: 24px; }
+        
+        /* Вкладки */
+        .tabs { display: flex; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; gap: 8px; }
+        .tab-btn { background-color: #e0e0e0; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 13px; transition: background 0.3s; font-weight: bold; color: #555;}
+        .tab-btn.active { background-color: #3498db; color: white; }
+        .tab-btn:hover:not(.active) { background-color: #d0d0d0; }
+        .tab-btn.mix-btn { background: linear-gradient(135deg, #f6d365, #fda085); color: #d35400; border: 1px solid #f39c12; }
+        .tab-btn.mix-btn.active { background: #e67e22; color: white; border-color: #d35400; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Общие элементы */
+        .card { background: #fff; padding: 15px 20px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .text-container { flex-grow: 1; padding-right: 15px;}
+        .greek { font-size: 18px; font-weight: bold; color: #2980b9; margin-bottom: 5px; }
+        .russian { font-size: 14px; color: #7f8c8d; }
+        .play-btn { background-color: #3498db; color: white; border: none; border-radius: 50%; min-width: 45px; height: 45px; font-size: 20px; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background 0.3s; flex-shrink: 0;}
+        .play-btn:hover { background-color: #2980b9; }
+        .exercise-box { background: #fff; padding: 25px 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
+        .question { font-size: 18px; font-weight: bold; margin-bottom: 25px; color: #2c3e50; line-height: 1.4; }
+        .options-grid { display: flex; flex-direction: column; gap: 10px; }
+        .option-btn { background-color: #ecf0f1; border: 2px solid #bdc3c7; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: all 0.2s; color: #333; font-weight: bold;}
+        .option-btn:hover:not(:disabled) { background-color: #e0e6e8; border-color: #95a5a6; }
+        .option-btn:disabled { cursor: default; }
+        .option-btn.correct { background-color: #2ecc71; border-color: #27ae60; color: white; }
+        .option-btn.wrong { background-color: #e74c3c; border-color: #c0392b; color: white; }
+        .feedback { margin-top: 15px; font-size: 16px; font-weight: bold; min-height: 25px; line-height: 1.6; }
+        .feedback.success { color: #27ae60; font-size: 16px; }
+        .feedback.error { color: #c0392b; font-size: 15px; }
+        
+        .feedback-correct { color: #27ae60; font-weight: bold; margin-top: 8px; }
+        .feedback-meaning { color: #5d6d7b; font-weight: normal; margin-top: 5px; font-size: 14px; }
+        .next-btn { margin-top: 20px; background-color: #9b59b6; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; display: none; margin-left: auto; margin-right: auto; }
+        
+        /* Сборка */
+        .constructor-area { min-height: 50px; border: 2px dashed #bdc3c7; border-radius: 8px; padding: 10px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; background-color: #fafbfc;}
+        .word-bank { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 20px; }
+        .word-chip { background-color: #3498db; color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; user-select: none; }
+        .word-chip.used { opacity: 0; pointer-events: none; }
+        .check-btn { background-color: #2ecc71; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 16px; width: 100%;}
+        
+        /* Карточки */
+        .flashcard { background-color: transparent; width: 100%; height: 200px; perspective: 1000px; margin-bottom: 20px; cursor: pointer;}
+        .flashcard-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
+        .flashcard.flipped .flashcard-inner { transform: rotateX(180deg); }
+        .flashcard-front, .flashcard-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); padding: 20px; box-sizing: border-box;}
+        .flashcard-front { background-color: #fff; color: #2c3e50; font-size: 20px; font-weight: bold; }
+        .flashcard-back { background-color: #2980b9; color: white; transform: rotateX(180deg); font-size: 22px; font-weight: bold; flex-direction: column; gap: 15px;}
+        
+        /* Микс режим */
+        .mix-header { text-align: center; margin-bottom: 20px; padding: 15px; background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); border-radius: 8px; font-size: 18px; font-weight: bold; color: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; display: none; transition: transform 0.2s; }
+        .mix-header:active { transform: scale(0.98); }
+        .streak-number { font-size: 24px; color: #d35400; background: #fff; padding: 2px 12px; border-radius: 20px; margin: 0 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
+        .achievements-list { margin-top: 10px; min-height: 30px; }
+        .achievements-list span { font-size: 28px; margin: 0 4px; cursor: help; animation: scaleUp 0.3s; display: inline-block;}
+        @keyframes scaleUp { from {transform: scale(0);} to {transform: scale(1);} }
+
+        /* Toast Уведомления */
+        .toast { visibility: hidden; min-width: 250px; background-color: rgba(44, 62, 80, 0.95); color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 100; left: 50%; bottom: 30px; font-size: 16px; transform: translateX(-50%); font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3);}
+        .toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+        
+        /* Рассказ */
+        .story-sentence { cursor: pointer; padding: 5px 8px; border-radius: 4px; transition: all 0.2s; display: inline; margin-right: 4px; }
+        .story-sentence:hover { background-color: #fff3cd; }
+        .story-sentence.active { background-color: #d4edda; color: #155724; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>Греческий тренажер: PRO MAX</h1>
+    
+    <div class="tabs">
+        <button class="tab-btn" onclick="switchTab('dict', this)">Словарь</button>
+        <button class="tab-btn" onclick="switchTab('ex1', this)">Слово</button>
+        <button class="tab-btn" onclick="switchTab('ex2', this)">Перевод</button>
+        <button class="tab-btn" onclick="switchTab('ex3', this)">Сборка</button>
+        <button class="tab-btn" onclick="switchTab('ex4', this)">На слух</button>
+        <button class="tab-btn" onclick="switchTab('ex6', this)">Ударения</button>
+        <button class="tab-btn" onclick="switchTab('ex7', this)">Ошибки</button>
+        <button class="tab-btn" onclick="switchTab('ex5', this)">Карточки</button>
+        <button class="tab-btn" onclick="switchTab('story', this)">📖 Рассказ</button>
+        <button class="tab-btn mix-btn active" onclick="switchTab('mix', this)">🔥 МИКС</button>
+    </div>
+
+    <!-- Заголовок МИКС режима (кликабельный для ручного сброса) -->
+    <div id="mix-header" class="mix-header" onclick="manualResetStreak()" title="Нажмите, чтобы сбросить стрик">
+        🔥 Стрик правильных ответов: <span id="streak-count" class="streak-number">0</span>
+        <div id="achievements-list" class="achievements-list"></div>
+    </div>
+
+    <!-- Словарь -->
+    <div id="dict" class="tab-content"><div id="app"></div></div>
+    <!-- Вставь слово -->
+    <div id="ex1" class="tab-content"><div class="exercise-box"><div id="ex1-question" class="question"></div><div id="ex1-options" class="options-grid"></div><div id="ex1-feedback" class="feedback"></div><button id="ex1-next" class="next-btn" onclick="onNext('ex1')">Дальше ➡️</button></div></div>
+    <!-- Перевод -->
+    <div id="ex2" class="tab-content"><div class="exercise-box"><div id="ex2-question" class="question"></div><div id="ex2-options" class="options-grid"></div><div id="ex2-feedback" class="feedback"></div><button id="ex2-next" class="next-btn" onclick="onNext('ex2')">Дальше ➡️</button></div></div>
+    <!-- Сборка -->
+    <div id="ex3" class="tab-content"><div class="exercise-box"><div id="ex3-question" class="question"></div><div id="ex3-constructor" class="constructor-area"></div><div id="ex3-bank" class="word-bank"></div><button id="ex3-check" class="check-btn" onclick="checkEx3()">Проверить</button><div id="ex3-feedback" class="feedback"></div><button id="ex3-next" class="next-btn" onclick="onNext('ex3')">Дальше ➡️</button></div></div>
+    <!-- На слух -->
+    <div id="ex4" class="tab-content"><div class="exercise-box"><div class="question">Что было сказано?</div><button class="play-btn" style="width:70px; height:70px; font-size:35px; margin:0 auto 20px auto;" onclick="speakCurrentEx4()">🔊</button><div id="ex4-options" class="options-grid"></div><div id="ex4-feedback" class="feedback"></div><button id="ex4-next" class="next-btn" onclick="onNext('ex4')">Дальше ➡️</button></div></div>
+    
+    <!-- Ударения (EX 6) -->
+    <div id="ex6" class="tab-content"><div class="exercise-box"><div class="question">Выберите фразу с правильным ударением:<br><span id="ex6-ru" style="font-size:14px;font-weight:normal;"></span></div><div id="ex6-options" class="options-grid"></div><div id="ex6-feedback" class="feedback"></div><button id="ex6-next" class="next-btn" onclick="onNext('ex6')">Дальше ➡️</button></div></div>
+    
+    <!-- Ошибки (EX 7) -->
+    <div id="ex7" class="tab-content"><div class="exercise-box"><div class="question">Где НЕТ ошибки?<br><span id="ex7-ru" style="font-size:14px;font-weight:normal;"></span></div><div id="ex7-options" class="options-grid"></div><div id="ex7-feedback" class="feedback"></div><button id="ex7-next" class="next-btn" onclick="onNext('ex7')">Дальше ➡️</button></div></div>
+
+    <!-- Карточки -->
+    <div id="ex5" class="tab-content"><div class="exercise-box" style="background:transparent;box-shadow:none;"><div class="flashcard" id="flashcard" onclick="flipCard()"><div class="flashcard-inner"><div class="flashcard-front"><div><span id="card-ru"></span><div style="font-size:12px;color:#7f8c8d;margin-top:10px;">(нажмите, чтобы перевернуть)</div></div></div><div class="flashcard-back"><span id="card-el"></span><button class="play-btn" onclick="event.stopPropagation(); speakCard()" style="background:white;color:#2980b9;">🔊</button></div></div></div><button class="next-btn" style="display:block;width:100%;" onclick="loadEx5()">Следующая карточка ➡️</button></div></div>
+
+    <!-- Рассказ -->
+    <div id="story" class="tab-content"><div class="exercise-box" style="background:transparent;text-align:left;"><h2 style="text-align:center;color:#2980b9;margin-bottom:10px;">🦕 Динозавр Лингво</h2><p style="text-align:center;font-size:13px;color:#7f8c8d;margin-bottom:15px;">Нажимай на предложения или слушай весь рассказ</p><button class="play-btn" style="display:block;width:60px;height:60px;font-size:30px;margin:0 auto 15px;" onclick="speakFullStory()">🔊</button><div id="story-content" style="line-height:2.5;font-size:16px;"></div></div></div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+        const storyData = [
+            { el: "Η μέρα μου στην πόλη", ru: "Мой день в городе" },
+            { el: "Σήμερα είμαι απογοητευμένος από τη δουλειά.", ru: "Сегодня я разочарован в работе." },
+            { el: "Αποφάσισα να φύγω από το γραφείο και να κάνω ένα περίπατο.", ru: "Я решил выйти из офиса и погулять." },
+            { el: "Περνάω από την πλατεία και βλέπω ένα γνώριμο καφέ.", ru: "Я прохожу мимо площади и вижу знакомое кафе." },
+            { el: "Δίπλα στην πλατεία υπάρχει ένα ταχυδρομείο.", ru: "Рядом с площадью находится почтовое отделение." },
+            { el: "Πρέπει να στείλω μερικά γράμματα, γι' αυτό πηγαίνω εκεί.", ru: "Мне нужно отправить письма, поэтому я иду туда." },
+            { el: "Στο ταχυδρομείο στέλνω γράμματα στο ταχυδρομείο.", ru: "На почте я отправляю письма." },
+            { el: "Μετά αισθάνομαι κούρασή και ψάχνω ένα ήσυχο μέρος.", ru: "После этого чувствую усталость и ищу тихое место." },
+            { el: "Καλύτερα να πάω στο μουσείο.", ru: "Лучше я пойду в музей." },
+            { el: "Μερικές φορές πάω στο μουσείο και αυτό με βοηθάει να ξεχάσω τη δουλειά.", ru: "Иногда я хожу в музей и это помогает мне забыть о работе." },
+            { el: "Τα έργα τέχνης, η ιστορία, η ησυχία... αυτό είναι ακριβώς αυτό που χρειάζομαι.", ru: "Искусство, история, тишина... это именно то, что мне нужно." },
+            { el: "Το βράδυ επιστρέφω σπίτι πιο ήσυχος και με καλύτερη διάθεση.", ru: "Вечером я возвращаюсь домой спокойнее и с лучшим настроением." }
+        ];
+
+        const phrases = [
+            { 
+                el: "δίπλα στην πλατεία", ru: "рядом с площадью",
+                wAccents: ["διπλά στην πλατεία", "δίπλα στήν πλατεία", "δίπλα στην πλατεια"],
+                mistakes: ["δίπλα στο πλατεία", "δίπλα στην πλατία", "δείπλα στην πλατεία"]
+            },
+            { 
+                el: "περνάω από την πλατεία", ru: "прохожу через / мимо площади",
+                wAccents: ["περναώ από την πλατεία", "περνάω απο τήν πλατεία", "περνάω άπο την πλατεία"],
+                mistakes: ["περνάω από τον πλατεία", "περνάω απο την πλατία", "περναω από την πλατεία"]
+            },
+            { 
+                el: "μερικές φορές πάω στο μουσείο", ru: "иногда я хожу в музей",
+                wAccents: ["μερικες φόρες πάω στο μουσείο", "μερικές φορές παώ στο μουσείο", "μερικές φορές πάω στό μουσείο"],
+                mistakes: ["μερικές φορές πάω στη μουσείο", "μερικές φωρές πάω στο μουσείο", "μερικές φορές πάω στο μουσίο"]
+            },
+            { 
+                el: "στέλνω γράμματα στο ταχυδρομείο", ru: "отправляю письма на почте",
+                wAccents: ["στελνώ γράμματα στο ταχυδρομείο", "στέλνω γραμμάτα στο ταχυδρομείο", "στέλνω γράμματα στό ταχυδρομείο"],
+                mistakes: ["στέλνω γράματα στο ταχυδρομείο", "στέλνω γράμματα στη ταχυδρομείο", "σταίλνω γράμματα στο ταχυδρομείο"]
+            },
+            { 
+                el: "ζητώ κατεύθυνση για το νοσοκομείο", ru: "спрашиваю дорогу к больнице",
+                wAccents: ["ζήτω κατεύθυνση για το νοσοκομείο", "ζητώ κατευθύνση για το νοσοκομείο", "ζητώ κατεύθυνση γιά το νοσοκομείο"],
+                mistakes: ["ζητώ κατεύθηνση για το νοσοκομείο", "ζητώ κατεύθυνση για τη νοσοκομείο", "ζιτώ κατεύθυνση για το νοσοκομείο"]
+            },
+            { 
+                el: "είμαι απογοητευμένος από τη δουλειά", ru: "я разочарован в работе",
+                wAccents: ["ειμαί απογοητευμένος από τη δουλειά", "είμαι απογοητευμενος άπο τη δουλειά", "είμαι απογοητευμένος από τή δουλειά"],
+                mistakes: ["είμαι απογοητευμένος από το δουλειά", "είμε απογοητευμένος από τη δουλειά", "είμαι απογοητευμένος από τη δουλειάς"]
+            }
+        ];
+
+        let isMixMode = false;
+        let streak = 0;
+        let unlockedAchievements = [];
+        let currentPhrase = null;
+        const achievementsMap = {
+            3: { icon: "🔥", desc: "Стрик 3: Разогрев!" },
+            5: { icon: "🥉", desc: "Стрик 5: Отличник!" },
+            10: { icon: "🥈", desc: "Стрик 10: Полиглот!" },
+            15: { icon: "🥇", desc: "Стрик 15: Мастер!" },
+            20: { icon: "👑", desc: "Стрик 20: Легенда!" }
+        };
+
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(text); u.lang = 'el-GR'; u.rate = 0.9;
+                window.speechSynthesis.speak(u);
+            }
+        }
+        function shuffle(array) {
+            let cur = array.length, rnd;
+            while (cur != 0) { rnd = Math.floor(Math.random() * cur); cur--; [array[cur], array[rnd]] = [array[rnd], array[cur]]; }
+            return array;
+        }
+
+        // Инициализация словаря
+        const appContainer = document.getElementById('app');
+        phrases.forEach(p => {
+            const c = document.createElement('div'); c.className = 'card';
+            const textDiv = document.createElement('div'); textDiv.className = 'text-container';
+            const greek = document.createElement('div'); greek.className = 'greek'; greek.textContent = p.el;
+            const russian = document.createElement('div'); russian.className = 'russian'; russian.textContent = p.ru;
+            textDiv.appendChild(greek);
+            textDiv.appendChild(russian);
+            
+            const btn = document.createElement('button'); btn.className = 'play-btn'; btn.textContent = '🔊';
+            btn.onclick = () => speak(p.el);
+            
+            c.appendChild(textDiv);
+            c.appendChild(btn);
+            appContainer.appendChild(c);
+        });
+
+        // Навигация и МИКС
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+            
+            isMixMode = (tabId === 'mix');
+            document.getElementById('mix-header').style.display = isMixMode ? 'block' : 'none';
+            
+            if (isMixMode) {
+                nextMix();
+            } else {
+                document.getElementById(tabId).classList.add('active');
+                if(tabId==='ex1') loadEx1(); if(tabId==='ex2') loadEx2();
+                if(tabId==='ex3') loadEx3(); if(tabId==='ex4') loadEx4();
+                if(tabId==='ex6') loadEx6(); if(tabId==='ex7') loadEx7();
+                if(tabId==='ex5') loadEx5(); if(tabId==='story') loadStory();
+            }
+        }
+
+        function onNext(exId) {
+            if (isMixMode) nextMix();
+            else {
+                if(exId==='ex1') loadEx1(); if(exId==='ex2') loadEx2();
+                if(exId==='ex3') loadEx3(); if(exId==='ex4') loadEx4();
+                if(exId==='ex6') loadEx6(); if(exId==='ex7') loadEx7();
+            }
+        }
+
+        function nextMix() {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            const types = ['ex1', 'ex2', 'ex3', 'ex4', 'ex6', 'ex7'];
+            const rnd = types[Math.floor(Math.random() * types.length)];
+            document.getElementById(rnd).classList.add('active');
+            
+            if(rnd==='ex1') loadEx1(); if(rnd==='ex2') loadEx2();
+            if(rnd==='ex3') loadEx3(); if(rnd==='ex4') loadEx4();
+            if(rnd==='ex6') loadEx6(); if(rnd==='ex7') loadEx7();
+        }
+
+        function handleResult(isCorrect) {
+            if (!isMixMode) return;
+            if (isCorrect) {
+                streak++;
+                if (achievementsMap[streak]) {
+                    unlockedAchievements.push(achievementsMap[streak]);
+                    showToast("🏆 " + achievementsMap[streak].desc);
+                }
+            } else {
+                if (streak > 0) {
+                    showToast("Стрик сброшен 😢");
+                }
+                streak = 0;
+                unlockedAchievements = [];
+            }
+            updateStreakUI();
+        }
+
+        function manualResetStreak() {
+            if (streak > 0 || unlockedAchievements.length > 0) {
+                streak = 0;
+                unlockedAchievements = [];
+                updateStreakUI();
+                showToast("Стрик сброшен вручную 🔄");
+            }
+            if (isMixMode) {
+                nextMix();
+            }
+        }
+
+        function updateStreakUI() {
+            document.getElementById('streak-count').textContent = streak;
+            document.getElementById('achievements-list').innerHTML = unlockedAchievements.map(a => `<span title="${a.desc}">${a.icon}</span>`).join('');
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.className = "toast show";
+            setTimeout(() => { t.className = t.className.replace("show", ""); }, 2800);
+        }
+
+        function feedback(prefix, isCorrect, correctAnswer = null, currentPhrase = null) {
+            handleResult(isCorrect);
+            const el = document.getElementById(`${prefix}-feedback`);
+            const btn = document.getElementById(`${prefix}-next`);
+            
+            if(isCorrect) { 
+                el.textContent = "Правильно! 🎉"; 
+                el.className = "feedback success"; 
+                btn.style.display = 'block'; 
+            }
+            else { 
+                let html = `<div>Ошибка 😢</div>`;
+                if(correctAnswer) {
+                    html += `<div class="feedback-correct">✅ ${correctAnswer}</div>`;
+                }
+                if(currentPhrase && currentPhrase.ru) {
+                    html += `<div class="feedback-meaning">📝 ${currentPhrase.ru}</div>`;
+                }
+                el.innerHTML = html;
+                el.className = "feedback error"; 
+            }
+        }
+
+        // --- EX 1 (Слово) ---
+        function loadEx1() {
+            document.getElementById('ex1-feedback').textContent = ''; document.getElementById('ex1-next').style.display = 'none';
+            const cont = document.getElementById('ex1-options'); cont.innerHTML = '';
+            const p = phrases[Math.floor(Math.random() * phrases.length)];
+            const words = p.el.split(' ');
+            const valid = words.map((w, i) => w.length > 2 ? i : -1).filter(i => i !== -1);
+            const hIdx = valid.length > 0 ? valid[Math.floor(Math.random() * valid.length)] : Math.floor(Math.random() * words.length);
+            const hWord = words[hIdx];
+            const dWords = [...words]; dWords[hIdx] = "______";
+            document.getElementById('ex1-question').innerHTML = `${dWords.join(' ')}<br><span class="russian" style="font-size:16px; font-weight:normal;">(${p.ru})</span>`;
+            
+            let all = []; phrases.forEach(ph => ph.el.split(' ').forEach(w => { if(w.length>2 && !all.includes(w)) all.push(w); }));
+            all = all.filter(w => w !== hWord); shuffle(all);
+            let opts = [hWord, ...all.slice(0, 3)]; shuffle(opts);
+            
+            opts.forEach(opt => {
+                const btn = document.createElement('button'); btn.className = 'option-btn'; btn.textContent = opt;
+                btn.onclick = () => {
+                    cont.querySelectorAll('button').forEach(b => b.disabled = true);
+                    if (opt === hWord) { btn.classList.add('correct'); feedback('ex1', true); speak(p.el); } 
+                    else { btn.classList.add('wrong'); feedback('ex1', false, hWord, p); }
+                };
+                cont.appendChild(btn);
+            });
+        }
+
+        // --- EX 2 (Перевод) ---
+        function loadEx2() {
+            document.getElementById('ex2-feedback').textContent = ''; document.getElementById('ex2-next').style.display = 'none';
+            const cont = document.getElementById('ex2-options'); cont.innerHTML = '';
+            const p = phrases[Math.floor(Math.random() * phrases.length)];
+            document.getElementById('ex2-question').innerHTML = `${p.el}<br><span class="russian" style="font-size:14px;font-weight:normal;">Перевод:</span>`;
+            
+            let wrong = []; phrases.forEach(ph => { if(ph.ru !== p.ru) wrong.push(ph.ru); });
+            shuffle(wrong);
+            let opts = [p.ru, ...wrong.slice(0, 3)]; shuffle(opts);
+            
+            opts.forEach(opt => {
+                const btn = document.createElement('button'); btn.className = 'option-btn'; btn.textContent = opt;
+                btn.onclick = () => {
+                    cont.querySelectorAll('button').forEach(b => b.disabled = true);
+                    if (opt === p.ru) { btn.classList.add('correct'); feedback('ex2', true); } 
+                    else { btn.classList.add('wrong'); feedback('ex2', false, p.ru, p); }
+                };
+                cont.appendChild(btn);
+            });
+        }
+
+        // --- EX 3 (Сборка) ---
+        let currentEx3Phrase = null;
+        function loadEx3() {
+            document.getElementById('ex3-feedback').textContent = ''; document.getElementById('ex3-next').style.display = 'none';
+            document.getElementById('ex3-check').style.display = 'block';
+            const cons = document.getElementById('ex3-constructor');
+            cons.innerHTML = '';
+            
+            currentEx3Phrase = phrases[Math.floor(Math.random() * phrases.length)];
+            const words = currentEx3Phrase.el.split(' ');
+            document.getElementById('ex3-question').innerHTML = `Соберите фразу:<br><span class="russian" style="font-size:14px;font-weight:normal;">${currentEx3Phrase.ru}</span>`;
+            
+            const bank = document.getElementById('ex3-bank'); bank.innerHTML = '';
+            shuffle([...words]).forEach(w => {
+                const chip = document.createElement('div'); chip.className = 'word-chip'; chip.textContent = w;
+                chip.onclick = () => {
+                    const span = document.createElement('span'); span.className = 'word-chip'; span.textContent = w;
+                    cons.appendChild(span);
+                    chip.classList.add('used');
+                };
+                bank.appendChild(chip);
+            });
+        }
+
+        function checkEx3() {
+            const cons = document.getElementById('ex3-constructor');
+            const result = Array.from(cons.querySelectorAll('span')).map(s => s.textContent).join(' ');
+            if (result === currentEx3Phrase.el) {
+                document.getElementById('ex3-feedback').textContent = "Правильно! 🎉"; document.getElementById('ex3-feedback').className = "feedback success";
+                document.getElementById('ex3-check').style.display = 'none'; document.getElementById('ex3-next').style.display = 'block';
+                feedback('ex3', true);
+                speak(currentEx3Phrase.el);
+            } else {
+                const feedbackEl = document.getElementById('ex3-feedback');
+                feedbackEl.innerHTML = `<div>Ошибка 😢</div><div class="feedback-correct">✅ ${currentEx3Phrase.el}</div><div class="feedback-meaning">📝 ${currentEx3Phrase.ru}</div>`;
+                feedbackEl.className = "feedback error";
+                handleResult(false);
+            }
+        }
+
+        // --- EX 4 (На слух) ---
+        function loadEx4() {
+            document.getElementById('ex4-feedback').textContent = ''; document.getElementById('ex4-next').style.display = 'none';
+            const cont = document.getElementById('ex4-options'); cont.innerHTML = '';
+            currentPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+            
+            let wrong = []; phrases.forEach(ph => { if(ph.ru !== currentPhrase.ru) wrong.push(ph.ru); });
+            shuffle(wrong);
+            let opts = [currentPhrase.ru, ...wrong.slice(0, 3)]; shuffle(opts);
+            
+            opts.forEach(opt => {
+                const btn = document.createElement('button'); btn.className = 'option-btn'; btn.textContent = opt;
+                btn.onclick = () => {
+                    cont.querySelectorAll('button').forEach(b => b.disabled = true);
+                    if (opt === currentPhrase.ru) { btn.classList.add('correct'); feedback('ex4', true); } 
+                    else { btn.classList.add('wrong'); feedback('ex4', false, currentPhrase.ru, currentPhrase); }
+                };
+                cont.appendChild(btn);
+            });
+        }
+
+        function speakCurrentEx4() {
+            if (currentPhrase) speak(currentPhrase.el);
+        }
+
+        // --- EX 5 (Карточки) ---
+        function loadEx5() {
+            const p = phrases[Math.floor(Math.random() * phrases.length)];
+            document.getElementById('card-ru').textContent = p.ru;
+            document.getElementById('card-el').textContent = p.el;
+            const fc = document.getElementById('flashcard');
+            fc.classList.remove('flipped');
+        }
+
+        function flipCard() {
+            const fc = document.getElementById('flashcard');
+            fc.classList.toggle('flipped');
+        }
+
+        function speakCard() {
+            const el = document.getElementById('card-el').textContent;
+            speak(el);
+        }
+
+        // --- EX 6 (Ударения) ---
+        function loadEx6() {
+            document.getElementById('ex6-feedback').textContent = ''; document.getElementById('ex6-next').style.display = 'none';
+            const cont = document.getElementById('ex6-options'); cont.innerHTML = '';
+            const p = phrases[Math.floor(Math.random() * phrases.length)];
+            document.getElementById('ex6-ru').textContent = p.ru;
+            
+            let opts = [p.el, ...p.wAccents]; shuffle(opts);
+            opts.forEach(opt => {
+                const btn = document.createElement('button'); btn.className = 'option-btn'; btn.textContent = opt;
+                btn.onclick = () => {
+                    cont.querySelectorAll('button').forEach(b => b.disabled = true);
+                    if (opt === p.el) { btn.classList.add('correct'); feedback('ex6', true); speak(p.el); } 
+                    else { btn.classList.add('wrong'); feedback('ex6', false, p.el, p); }
+                };
+                cont.appendChild(btn);
+            });
+        }
+
+        // --- EX 7 (Ошибки) ---
+        function loadEx7() {
+            document.getElementById('ex7-feedback').textContent = ''; document.getElementById('ex7-next').style.display = 'none';
+            const cont = document.getElementById('ex7-options'); cont.innerHTML = '';
+            const p = phrases[Math.floor(Math.random() * phrases.length)];
+            document.getElementById('ex7-ru').textContent = p.ru;
+            
+            let opts = [p.el, ...p.mistakes]; shuffle(opts);
+            opts.forEach(opt => {
+                const btn = document.createElement('button'); btn.className = 'option-btn'; btn.textContent = opt;
+                btn.onclick = () => {
+                    cont.querySelectorAll('button').forEach(b => b.disabled = true);
+                    if (opt === p.el) { btn.classList.add('correct'); feedback('ex7', true); speak(p.el); } 
+                    else { btn.classList.add('wrong'); feedback('ex7', false, p.el, p); }
+                };
+                cont.appendChild(btn);
+            });
+        }
+
+        // --- РАССКАЗ (Динозавр Лингво) ---
+        function loadStory() {
+            const storyContent = document.getElementById('story-content');
+            storyContent.innerHTML = '';
+            
+            storyData.forEach((sent, idx) => {
+                const sentenceWrapper = document.createElement('div');
+                sentenceWrapper.style.marginBottom = '8px';
+                
+                const span = document.createElement('span');
+                span.className = 'story-sentence';
+                span.textContent = sent.el;
+                span.setAttribute('data-index', idx);
+                span.setAttribute('data-translation', sent.ru);
+                span.onclick = function() {
+                    showStoryTranslation(this.getAttribute('data-translation'), this, parseInt(this.getAttribute('data-index')));
+                };
+                
+                sentenceWrapper.appendChild(span);
+                storyContent.appendChild(sentenceWrapper);
+            });
+        }
+
+        function showStoryTranslation(translation, element, idx) {
+            // Удаляем все предыдущие переводы
+            document.querySelectorAll('.story-translation-item').forEach(t => t.remove());
+            // Убираем активный класс со всех
+            document.querySelectorAll('.story-sentence').forEach(s => s.classList.remove('active'));
+            // Добавляем активный класс текущему
+            element.classList.add('active');
+            
+            // Создаем элемент перевода прямо под предложением
+            const translationDiv = document.createElement('div');
+            translationDiv.className = 'story-translation-item';
+            translationDiv.style.display = 'block';
+            translationDiv.style.marginTop = '5px';
+            translationDiv.style.marginBottom = '8px';
+            translationDiv.style.paddingLeft = '20px';
+            translationDiv.style.paddingRight = '8px';
+            translationDiv.style.paddingTop = '8px';
+            translationDiv.style.paddingBottom = '8px';
+            translationDiv.style.backgroundColor = '#e8f4f8';
+            translationDiv.style.borderLeft = '4px solid #3498db';
+            translationDiv.style.borderRadius = '4px';
+            translationDiv.style.fontSize = '14px';
+            translationDiv.style.color = '#2c3e50';
+            translationDiv.style.animation = 'fadeIn 0.3s';
+            
+            const label = document.createElement('strong');
+            label.style.color = '#3498db';
+            label.textContent = '→ ';
+            
+            const text = document.createElement('span');
+            text.textContent = translation + ' ';
+            
+            const btn = document.createElement('button');
+            btn.className = 'play-btn';
+            btn.style.marginLeft = '10px';
+            btn.style.width = '35px';
+            btn.style.height = '35px';
+            btn.style.fontSize = '16px';
+            btn.textContent = '🔊';
+            btn.onclick = () => speak(storyData[idx].el);
+            
+            translationDiv.appendChild(label);
+            translationDiv.appendChild(text);
+            translationDiv.appendChild(btn);
+            
+            // Вставляем перевод в контейнер предложения после span'а
+            const parentDiv = element.parentNode;
+            parentDiv.appendChild(translationDiv);
+        }
+
+        function speakFullStory() {
+            const texts = storyData.map(s => s.el).join('. ');
+            speak(texts);
+        }
+
+        // Инициализация по умолчанию
+        loadEx5();
+        loadStory();
+    </script>
+</body>
+</html>

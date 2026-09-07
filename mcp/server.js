@@ -413,6 +413,70 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
+        name: "get_conjugation_rule",
+        description: "Get the conjugation rule for present tense of 'είμαι'",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+      {
+        name: "get_random_conjugation",
+        description: "Get a random conjugation exercise",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+      {
+        name: "get_conjugation_exercise",
+        description: "Get a specific conjugation exercise for a person",
+        inputSchema: {
+          type: "object",
+          properties: {
+            person: {
+              type: "string",
+              description: "Greek person (Εγώ, Εσύ, Αυτός/Αυτή/Αυτό, Εμείς, Εσείς, Αυτοί/Αυτές/Αυτά)",
+            },
+          },
+          required: ["person"],
+        },
+      },
+      {
+        name: "record_conjugation_result",
+        description: "Record result of conjugation exercise",
+        inputSchema: {
+          type: "object",
+          properties: {
+            person: {
+              type: "string",
+              description: "Greek person",
+            },
+            isCorrect: {
+              type: "boolean",
+              description: "Whether the answer was correct",
+            },
+          },
+          required: ["person", "isCorrect"],
+        },
+      },
+      {
+        name: "get_all_conjugations",
+        description: "Get all conjugations for the rule",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+      {
+        name: "get_conjugation_examples",
+        description: "Get practice examples for conjugation",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+      {
         name: "get_lists",
         description: "Get all word lists",
         inputSchema: {
@@ -787,6 +851,39 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "get_words_by_rule": {
         result = await apiCall("GET", `/word-exercises/by-rule/${args.ruleId}`);
+        break;
+      }
+
+      case "get_conjugation_rule": {
+        result = await apiCall("GET", "/conjugation/rule");
+        break;
+      }
+
+      case "get_random_conjugation": {
+        result = await apiCall("GET", "/conjugation/random");
+        break;
+      }
+
+      case "get_conjugation_exercise": {
+        result = await apiCall("GET", `/conjugation/exercise/${args.person}`);
+        break;
+      }
+
+      case "record_conjugation_result": {
+        result = await apiCall("POST", "/conjugation/result", {
+          person: args.person,
+          isCorrect: args.isCorrect
+        });
+        break;
+      }
+
+      case "get_all_conjugations": {
+        result = await apiCall("GET", "/conjugation/all");
+        break;
+      }
+
+      case "get_conjugation_examples": {
+        result = await apiCall("GET", "/conjugation/examples");
         break;
       }
 

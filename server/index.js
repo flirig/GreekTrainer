@@ -9,6 +9,7 @@ import wordsRouter from './routes/words.js';
 import listsRouter from './routes/lists.js';
 import rulesRouter from './routes/rules.js';
 import wordExercisesRouter from './routes/word-exercises.js';
+import conjugationRouter from './routes/conjugation.js';
 import { verifyToken, requireAdmin } from './middleware/auth.js';
 import db from './db/database.js';
 import { extractWordsFromPhrases } from './utils/extract-words.js';
@@ -40,6 +41,7 @@ app.use('/api/rules', rulesRouter);
 app.use('/api/lists', listsRouter);
 app.use('/api/exercises', exercisesRouter);
 app.use('/api/word-exercises', wordExercisesRouter);
+app.use('/api/conjugation', conjugationRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

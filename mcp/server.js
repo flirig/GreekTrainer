@@ -224,6 +224,196 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["email", "password"],
         },
       },
+      {
+        name: "get_words",
+        description: "Get all Greek words",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+      {
+        name: "get_word",
+        description: "Get a specific word with variants",
+        inputSchema: {
+          type: "object",
+          properties: {
+            id: {
+              type: "number",
+              description: "Word ID",
+            },
+          },
+          required: ["id"],
+        },
+      },
+      {
+        name: "add_word",
+        description: "Add a new Greek word (requires admin)",
+        inputSchema: {
+          type: "object",
+          properties: {
+            el: {
+              type: "string",
+              description: "Greek word",
+            },
+            ru: {
+              type: "string",
+              description: "Russian translation",
+            },
+            accents: {
+              type: "array",
+              items: { type: "string" },
+              description: "Variants with different accents",
+            },
+            mistakes: {
+              type: "array",
+              items: { type: "string" },
+              description: "Common mistake variants",
+            },
+          },
+          required: ["el", "ru"],
+        },
+      },
+      {
+        name: "delete_word",
+        description: "Delete a word (requires admin)",
+        inputSchema: {
+          type: "object",
+          properties: {
+            id: {
+              type: "number",
+              description: "Word ID",
+            },
+          },
+          required: ["id"],
+        },
+      },
+      {
+        name: "get_lists",
+        description: "Get all word lists",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+      {
+        name: "get_list",
+        description: "Get a specific list with phrases and words",
+        inputSchema: {
+          type: "object",
+          properties: {
+            id: {
+              type: "number",
+              description: "List ID",
+            },
+          },
+          required: ["id"],
+        },
+      },
+      {
+        name: "create_list",
+        description: "Create a new word list (requires admin)",
+        inputSchema: {
+          type: "object",
+          properties: {
+            title: {
+              type: "string",
+              description: "List title",
+            },
+            description: {
+              type: "string",
+              description: "List description (optional)",
+            },
+          },
+          required: ["title"],
+        },
+      },
+      {
+        name: "add_phrase_to_list",
+        description: "Add a phrase to a list (requires admin)",
+        inputSchema: {
+          type: "object",
+          properties: {
+            listId: {
+              type: "number",
+              description: "List ID",
+            },
+            phraseId: {
+              type: "number",
+              description: "Phrase ID",
+            },
+          },
+          required: ["listId", "phraseId"],
+        },
+      },
+      {
+        name: "add_word_to_list",
+        description: "Add a word to a list (requires admin)",
+        inputSchema: {
+          type: "object",
+          properties: {
+            listId: {
+              type: "number",
+              description: "List ID",
+            },
+            wordId: {
+              type: "number",
+              description: "Word ID",
+            },
+          },
+          required: ["listId", "wordId"],
+        },
+      },
+      {
+        name: "remove_phrase_from_list",
+        description: "Remove a phrase from a list (requires admin)",
+        inputSchema: {
+          type: "object",
+          properties: {
+            listId: {
+              type: "number",
+              description: "List ID",
+            },
+            phraseId: {
+              type: "number",
+              description: "Phrase ID",
+            },
+          },
+          required: ["listId", "phraseId"],
+        },
+      },
+      {
+        name: "remove_word_from_list",
+        description: "Remove a word from a list (requires admin)",
+        inputSchema: {
+          type: "object",
+          properties: {
+            listId: {
+              type: "number",
+              description: "List ID",
+            },
+            wordId: {
+              type: "number",
+              description: "Word ID",
+            },
+          },
+          required: ["listId", "wordId"],
+        },
+      },
+      {
+        name: "delete_list",
+        description: "Delete a list (requires admin)",
+        inputSchema: {
+          type: "object",
+          properties: {
+            id: {
+              type: "number",
+              description: "List ID",
+            },
+          },
+          required: ["id"],
+        },
+      },
     ],
   };
 });
@@ -314,6 +504,104 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           email: args.email,
           password: args.password,
         });
+        break;
+      }
+
+      case "get_words": {
+        result = await apiCall("GET", "/words");
+        break;
+      }
+
+      case "get_word": {
+        result = await apiCall("GET", `/words/${args.id}`);
+        break;
+      }
+
+      case "add_word": {
+        result = await apiCall(
+          "POST",
+          "/words",
+          {
+            el: args.el,
+            ru: args.ru,
+            accents: args.accents || [],
+            mistakes: args.mistakes || [],
+          },
+          true
+        );
+        break;
+      }
+
+      case "delete_word": {
+        result = await apiCall("DELETE", `/words/${args.id}`, null, true);
+        break;
+      }
+
+      case "get_lists": {
+        result = await apiCall("GET", "/lists");
+        break;
+      }
+
+      case "get_list": {
+        result = await apiCall("GET", `/lists/${args.id}`);
+        break;
+      }
+
+      case "create_list": {
+        result = await apiCall(
+          "POST",
+          "/lists",
+          {
+            title: args.title,
+            description: args.description,
+          },
+          true
+        );
+        break;
+      }
+
+      case "add_phrase_to_list": {
+        result = await apiCall(
+          "PUT",
+          `/lists/${args.listId}/phrases/${args.phraseId}`,
+          {},
+          true
+        );
+        break;
+      }
+
+      case "add_word_to_list": {
+        result = await apiCall(
+          "PUT",
+          `/lists/${args.listId}/words/${args.wordId}`,
+          {},
+          true
+        );
+        break;
+      }
+
+      case "remove_phrase_from_list": {
+        result = await apiCall(
+          "DELETE",
+          `/lists/${args.listId}/phrases/${args.phraseId}`,
+          null,
+          true
+        );
+        break;
+      }
+
+      case "remove_word_from_list": {
+        result = await apiCall(
+          "DELETE",
+          `/lists/${args.listId}/words/${args.wordId}`,
+          null,
+          true
+        );
+        break;
+      }
+
+      case "delete_list": {
+        result = await apiCall("DELETE", `/lists/${args.id}`, null, true);
         break;
       }
 

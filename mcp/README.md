@@ -67,6 +67,22 @@ Or for Railway production:
 - `delete_phrase` - Delete phrase (requires admin)
 - `get_random_phrase` - Get random phrase for exercises
 
+### Words Management
+- `get_words` - Get all words
+- `get_word` - Get specific word with variants
+- `add_word` - Add new word (requires admin)
+- `delete_word` - Delete word (requires admin)
+
+### Word Lists
+- `get_lists` - Get all word lists
+- `get_list` - Get list with all phrases and words
+- `create_list` - Create new list (requires admin)
+- `add_phrase_to_list` - Add phrase to list (requires admin)
+- `add_word_to_list` - Add word to list (requires admin)
+- `remove_phrase_from_list` - Remove phrase from list (requires admin)
+- `remove_word_from_list` - Remove word from list (requires admin)
+- `delete_list` - Delete list (requires admin)
+
 ### Exercise Tracking
 - `record_exercise_result` - Record exercise result
 - `get_user_stats` - Get user statistics
@@ -74,7 +90,7 @@ Or for Railway production:
 ## Example Usage
 
 ```javascript
-// Add a new phrase
+// Phrases
 await tool_use("add_phrase", {
   el: "ζητώ τον λογαροασμό μετά το φαγητό",
   ru: "Прошу счет после обеда",
@@ -82,8 +98,34 @@ await tool_use("add_phrase", {
   mistakes: ["ζητώ τον λογαροασμό μετά τα φαγητό"]
 })
 
-// Get all phrases
-await tool_use("get_phrases", {})
+// Words
+await tool_use("add_word", {
+  el: "καλημέρα",
+  ru: "доброе утро",
+  accents: ["καλημέρα"],
+  mistakes: ["καλημέρα"]
+})
+
+// Lists
+await tool_use("create_list", {
+  title: "Greeting words",
+  description: "Common Greek greetings"
+})
+
+await tool_use("add_phrase_to_list", {
+  listId: 1,
+  phraseId: 1
+})
+
+await tool_use("add_word_to_list", {
+  listId: 1,
+  wordId: 1
+})
+
+// Get list with all content
+await tool_use("get_list", {
+  id: 1
+})
 
 // Record exercise result
 await tool_use("record_exercise_result", {

@@ -16,11 +16,14 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET word with variants
+// GET word with variants and phrases
 router.get('/:id', async (req, res) => {
   try {
     const database = await db.get();
-    const word = await database.get('SELECT id, el, ru FROM words WHERE id = ?', [req.params.id]);
+    const word = await database.get(
+      'SELECT id, el, ru, rule_id FROM words WHERE id = ?',
+      [req.params.id]
+    );
 
     if (!word) {
       return res.status(404).json({ error: 'Word not found' });
@@ -31,10 +34,24 @@ router.get('/:id', async (req, res) => {
       [req.params.id]
     );
 
+    const phrases = await database.all(
+      'SELECT p.id, p.el, p.ru FROM phrases p JOIN word_phrases wp ON p.id = wp.phrase_id WHERE wp.word_id = ?',
+      [req.params.id]
+    );
+
+    const rule = word.rule_id ? await database.get(
+      'SELECT id, name, description FROM grammar_rules WHERE id = ?',
+      [word.rule_id]
+    ) : null;
+
     res.json({
-      ...word,
+      id: word.id,
+      el: word.el,
+      ru: word.ru,
+      rule,
       accents: variants.filter(v => v.type === 'accent').map(v => v.variant),
-      mistakes: variants.filter(v => v.type === 'mistake').map(v => v.variant)
+      mistakes: variants.filter(v => v.type === 'mistake').map(v => v.variant),
+      phrases
     });
   } catch (error) {
     console.error('❌ Error fetching word:', error);
@@ -45,7 +62,7 @@ router.get('/:id', async (req, res) => {
 // POST new word (admin only)
 router.post('/', verifyToken, requireAdmin, async (req, res) => {
   try {
-    const { el, ru, accents = [], mistakes = [] } = req.body;
+    const { el, ru, ruleId, phraseIds = [], accents = [], mistakes = [] } = req.body;
 
     if (!el || !ru) {
       return res.status(400).json({ error: 'Missing required fields: el, ru' });
@@ -53,8 +70,8 @@ router.post('/', verifyToken, requireAdmin, async (req, res) => {
 
     const database = await db.get();
     const result = await database.run(
-      'INSERT INTO words (el, ru) VALUES (?, ?)',
-      [el, ru]
+      'INSERT INTO words (el, ru, rule_id) VALUES (?, ?, ?)',
+      [el, ru, ruleId || null]
     );
 
     const wordId = result.lastID || (await database.get(
@@ -77,12 +94,22 @@ router.post('/', verifyToken, requireAdmin, async (req, res) => {
       );
     }
 
+    // Link to phrases
+    for (const phraseId of phraseIds) {
+      await database.run(
+        'INSERT OR IGNORE INTO word_phrases (word_id, phrase_id) VALUES (?, ?)',
+        [wordId, phraseId]
+      );
+    }
+
     res.status(201).json({
       id: wordId,
       el,
       ru,
+      ruleId,
       accents,
-      mistakes
+      mistakes,
+      phrases: phraseIds
     });
   } catch (error) {
     console.error('❌ Error creating word:', error);

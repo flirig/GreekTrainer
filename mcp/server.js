@@ -289,6 +289,68 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
+        name: "get_rules",
+        description: "Get all grammar rules",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+      {
+        name: "get_rule",
+        description: "Get a specific grammar rule with words",
+        inputSchema: {
+          type: "object",
+          properties: {
+            id: {
+              type: "number",
+              description: "Rule ID",
+            },
+          },
+          required: ["id"],
+        },
+      },
+      {
+        name: "create_rule",
+        description: "Create a new grammar rule (requires admin)",
+        inputSchema: {
+          type: "object",
+          properties: {
+            name: {
+              type: "string",
+              description: "Rule name (e.g., 'Noun', 'Verb', 'Article')",
+            },
+            description: {
+              type: "string",
+              description: "Rule description (optional)",
+            },
+          },
+          required: ["name"],
+        },
+      },
+      {
+        name: "delete_rule",
+        description: "Delete a grammar rule (requires admin)",
+        inputSchema: {
+          type: "object",
+          properties: {
+            id: {
+              type: "number",
+              description: "Rule ID",
+            },
+          },
+          required: ["id"],
+        },
+      },
+      {
+        name: "extract_words",
+        description: "Extract words from all phrases and add to database",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+      {
         name: "get_lists",
         description: "Get all word lists",
         inputSchema: {
@@ -602,6 +664,43 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "delete_list": {
         result = await apiCall("DELETE", `/lists/${args.id}`, null, true);
+        break;
+      }
+
+      case "get_rules": {
+        result = await apiCall("GET", "/rules");
+        break;
+      }
+
+      case "get_rule": {
+        result = await apiCall("GET", `/rules/${args.id}`);
+        break;
+      }
+
+      case "create_rule": {
+        result = await apiCall(
+          "POST",
+          "/rules",
+          {
+            name: args.name,
+            description: args.description,
+          },
+          true
+        );
+        break;
+      }
+
+      case "delete_rule": {
+        result = await apiCall("DELETE", `/rules/${args.id}`, null, true);
+        break;
+      }
+
+      case "extract_words": {
+        result = {
+          message: "Word extraction should be run server-side",
+          command: "node server/utils/extract-words.js",
+          description: "Extracts words from existing phrases and populates words table"
+        };
         break;
       }
 

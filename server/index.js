@@ -7,6 +7,7 @@ import exercisesRouter from './routes/exercises.js';
 import authRouter from './routes/auth.js';
 import wordsRouter from './routes/words.js';
 import listsRouter from './routes/lists.js';
+import rulesRouter from './routes/rules.js';
 import { verifyToken } from './middleware/auth.js';
 import db from './db/database.js';
 
@@ -32,6 +33,7 @@ app.get('/admin', (req, res) => {
 app.use('/api/auth', authRouter);
 app.use('/api/phrases', phrasesRouter);
 app.use('/api/words', wordsRouter);
+app.use('/api/rules', rulesRouter);
 app.use('/api/lists', listsRouter);
 app.use('/api/exercises', exercisesRouter);
 

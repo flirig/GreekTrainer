@@ -119,7 +119,8 @@
         <button class="tab-btn" onclick="switchTab('ex4', this)">На слух</button>
         <button class="tab-btn" onclick="switchTab('ex6', this)">Ударения</button>
         <button class="tab-btn" onclick="switchTab('ex7', this)">Ошибки</button>
-        <button class="tab-btn" onclick="switchTab('conjugation', this)">📖 Правила</button>
+        <button class="tab-btn" onclick="switchTab('conjugation', this)">📖 είμαι</button>
+        <button class="tab-btn" onclick="switchTab('irregular', this)">🔤 Аномальные</button>
         <button class="tab-btn mix-btn active" onclick="switchTab('mix', this)">🔥 МИКС</button>
     </div>
 
@@ -177,6 +178,29 @@
 
     <!-- Ошибки -->
     <div id="ex7" class="tab-content"><div class="exercise-box"><div class="question">Где НЕТ ошибки?<br><span id="ex7-ru" style="font-size:14px;font-weight:normal;"></span></div><div id="ex7-options" class="options-grid"></div><div id="ex7-feedback" class="feedback"></div><button id="ex7-next" class="next-btn" onclick="onNext('ex7')">Дальше ➡️</button></div></div>
+
+    <!-- Аномальные глаголы -->
+    <div id="irregular" class="tab-content">
+        <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <h3 id="irregular-name" style="color: #2980b9; margin-top: 0;">Загрузка...</h3>
+
+            <div id="irregular-exercise" class="exercise-box" style="display: none;">
+                <div id="irreg-question" class="question"></div>
+                <div id="irreg-options" class="options-grid"></div>
+                <div id="irreg-feedback" class="feedback"></div>
+                <button id="irreg-next" class="next-btn" onclick="nextIrregular()">Дальше ➡️</button>
+            </div>
+
+            <div id="irregular-list" style="margin-top: 20px;">
+                <h4>Аномальные глаголы:</h4>
+                <div id="irregular-verbs-list"></div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="tab-btn" onclick="loadIrregularExercise()" style="padding: 12px 25px;">Начать упражнение 🎯</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
@@ -551,6 +575,104 @@
             });
         }
 
+        // Irregular Verbs Functions
+        let irregularRule = null;
+        let currentIrregular = null;
+        let currentIrregularVerb = null;
+
+        async function loadIrregularRule() {
+            try {
+                const res = await fetch(`${API_URL}/irregular-verbs/rule`);
+                irregularRule = await res.json();
+                document.getElementById('irregular-name').textContent = irregularRule.name;
+
+                // Display verbs
+                const list = document.getElementById('irregular-verbs-list');
+                list.innerHTML = '';
+                for (const [verb, data] of Object.entries(irregularRule.verbs)) {
+                    const div = document.createElement('div');
+                    div.style.marginBottom = '15px';
+                    div.style.padding = '10px';
+                    div.style.background = '#f9f9f9';
+                    div.style.borderRadius = '5px';
+                    div.innerHTML = `
+                        <strong style="color: #2980b9; font-size: 16px;">${verb}</strong> — ${data.ru}
+                    `;
+                    list.appendChild(div);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadIrregularExercise() {
+            try {
+                document.getElementById('irregular-exercise').style.display = 'block';
+                document.getElementById('irregular-list').style.display = 'none';
+
+                const res = await fetch(`${API_URL}/irregular-verbs/random`);
+                currentIrregular = await res.json();
+                currentIrregularVerb = currentIrregular.verb;
+
+                document.getElementById('irreg-question').innerHTML = `
+                    <strong>${currentIrregular.verb}</strong> (${currentIrregular.verbRu})<br>
+                    Форма: <strong>${currentIrregular.pronoun}</strong> (${currentIrregular.person})
+                `;
+                document.getElementById('irreg-feedback').textContent = '';
+                document.getElementById('irreg-next').style.display = 'none';
+
+                // Get options
+                const optRes = await fetch(`${API_URL}/irregular-verbs/exercise/${currentIrregular.verb}/${currentIrregular.person}`);
+                const optData = await optRes.json();
+
+                const cont = document.getElementById('irreg-options');
+                cont.innerHTML = '';
+                const options = shuffle(optData.options);
+
+                options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    btn.textContent = opt;
+                    btn.onclick = async () => {
+                        cont.querySelectorAll('button').forEach(b => b.disabled = true);
+                        const isCorrect = opt === currentIrregular.correctForm;
+
+                        if (isCorrect) {
+                            btn.classList.add('correct');
+                            document.getElementById('irreg-feedback').textContent = '✅ Верно!';
+                            document.getElementById('irreg-feedback').className = 'feedback success';
+                        } else {
+                            btn.classList.add('wrong');
+                            document.getElementById('irreg-feedback').innerHTML = `
+                                <div>❌ Ошибка</div>
+                                <div class="feedback-correct">✅ ${currentIrregular.correctForm}</div>
+                            `;
+                            document.getElementById('irreg-feedback').className = 'feedback error';
+                        }
+
+                        document.getElementById('irreg-next').style.display = 'block';
+
+                        await fetch(`${API_URL}/irregular-verbs/result`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': token ? `Bearer ${token}` : ''
+                            },
+                            body: JSON.stringify({ verb: currentIrregularVerb, person: currentIrregular.person, isCorrect })
+                        });
+                    };
+                    cont.appendChild(btn);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Ошибка загрузки упражнения');
+            }
+        }
+
+        function nextIrregular() {
+            loadIrregularExercise();
+        }
+
         // Conjugation Functions
         let conjugationRule = null;
         let currentConjugation = null;
@@ -783,6 +905,7 @@
         updateAuthUI();
         loadPhrases();
         loadConjugationRule();
+        loadIrregularRule();
     </script>
 </body>
 </html>

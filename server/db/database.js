@@ -11,7 +11,7 @@ const DB_DIR = join(__dirname, '../../data');
 const DB_PATH = join(DB_DIR, 'trainer.db');
 
 let dbInstance = null;
-const usePostgres = process.env.DATABASE_URL && process.env.NODE_ENV === 'production';
+const usePostgres = !!process.env.DATABASE_URL;
 
 // SQLite Database Wrapper
 class SQLiteDatabase {
@@ -68,23 +68,34 @@ class PostgresDatabase {
     this.client = client;
   }
 
+  _convertSql(sql, params) {
+    // Convert SQLite ? placeholders to PostgreSQL $1, $2, etc.
+    let paramIndex = 1;
+    const convertedSql = sql.replace(/\?/g, () => `$${paramIndex++}`);
+    return { sql: convertedSql, params };
+  }
+
   async query(sql, params = []) {
-    return this.client.query(sql, params);
+    const { sql: convertedSql, params: convertedParams } = this._convertSql(sql, params);
+    return this.client.query(convertedSql, convertedParams);
   }
 
   async get(sql, params = []) {
-    const result = await this.client.query(sql, params);
+    const { sql: convertedSql, params: convertedParams } = this._convertSql(sql, params);
+    const result = await this.client.query(convertedSql, convertedParams);
     return result.rows[0] || null;
   }
 
   async all(sql, params = []) {
-    const result = await this.client.query(sql, params);
+    const { sql: convertedSql, params: convertedParams } = this._convertSql(sql, params);
+    const result = await this.client.query(convertedSql, convertedParams);
     return result.rows || [];
   }
 
   async run(sql, params = []) {
-    const result = await this.client.query(sql, params);
-    return { changes: result.rowCount || 0 };
+    const { sql: convertedSql, params: convertedParams } = this._convertSql(sql, params);
+    const result = await this.client.query(convertedSql, convertedParams);
+    return { changes: result.rowCount || 0, lastID: result.rows?.[0]?.id };
   }
 
   async close() {

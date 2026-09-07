@@ -8,23 +8,34 @@ class Database {
     this.client = client;
   }
 
+  _convertSql(sql, params) {
+    // Convert SQLite ? placeholders to PostgreSQL $1, $2, etc.
+    let paramIndex = 1;
+    const convertedSql = sql.replace(/\?/g, () => `$${paramIndex++}`);
+    return { sql: convertedSql, params };
+  }
+
   async query(sql, params = []) {
-    return this.client.query(sql, params);
+    const { sql: convertedSql, params: convertedParams } = this._convertSql(sql, params);
+    return this.client.query(convertedSql, convertedParams);
   }
 
   async get(sql, params = []) {
-    const result = await this.query(sql, params);
+    const { sql: convertedSql, params: convertedParams } = this._convertSql(sql, params);
+    const result = await this.query(convertedSql, convertedParams);
     return result.rows[0] || null;
   }
 
   async all(sql, params = []) {
-    const result = await this.query(sql, params);
+    const { sql: convertedSql, params: convertedParams } = this._convertSql(sql, params);
+    const result = await this.query(convertedSql, convertedParams);
     return result.rows || [];
   }
 
   async run(sql, params = []) {
-    const result = await this.query(sql, params);
-    return { changes: result.rowCount || 0 };
+    const { sql: convertedSql, params: convertedParams } = this._convertSql(sql, params);
+    const result = await this.query(convertedSql, convertedParams);
+    return { changes: result.rowCount || 0, lastID: result.rows?.[0]?.id };
   }
 
   async close() {

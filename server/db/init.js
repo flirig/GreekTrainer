@@ -1,69 +1,58 @@
 import sqlite3 from 'sqlite3';
+import pg from 'pg';
+const { Client } = pg;
+import { SQLITE_SCHEMA, POSTGRES_SCHEMA, INITIAL_DATA } from './schema.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { promisify } from 'util';
 import fs from 'fs/promises';
-import { SCHEMA, INITIAL_DATA } from './schema.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
 const DB_DIR = join(__dirname, '../../data');
 const DB_PATH = join(DB_DIR, 'trainer.db');
 
-async function initDatabase() {
-  // Ensure data directory exists
-  try {
-    await fs.mkdir(DB_DIR, { recursive: true });
-    console.log('📁 Data directory:', DB_DIR);
-  } catch (err) {
-    console.error('❌ Error creating data directory:', err);
-  }
+const usePostgres = !!process.env.DATABASE_URL;
 
-  console.log('🔌 Opening database at:', DB_PATH);
-  const db = new sqlite3.Database(DB_PATH);
-  const run = promisify(db.run.bind(db));
+async function initPostgres() {
+  console.log('🔌 Connecting to PostgreSQL...');
+  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  await client.connect();
+  console.log('✅ Connected to PostgreSQL');
 
   try {
     console.log('📝 Creating schema...');
+    const statements = POSTGRES_SCHEMA
+      .split(';')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
 
-    // Execute schema statements one by one
-    const statements = SCHEMA.split(';').filter(s => s.trim());
     for (const statement of statements) {
-      if (statement.trim()) {
-        await run(statement);
-      }
+      await client.query(statement);
     }
+    console.log('✅ Schema created');
 
     console.log('🔄 Loading initial data...');
-
     for (const phrase of INITIAL_DATA) {
-      const result = await new Promise((resolve, reject) => {
-        db.run(
-          'INSERT OR IGNORE INTO phrases (el, ru) VALUES (?, ?)',
-          [phrase.el, phrase.ru],
-          function(err) {
-            if (err) reject(err);
-            resolve({ lastID: this.lastID });
-          }
-        );
-      });
+      const result = await client.query(
+        'INSERT INTO phrases (el, ru) VALUES ($1, $2) ON CONFLICT (el) DO NOTHING RETURNING id',
+        [phrase.el, phrase.ru]
+      );
 
-      if (result.lastID) {
-        const phraseId = result.lastID;
+      if (result.rows.length > 0) {
+        const phraseId = result.rows[0].id;
 
         // Add accent variants
         for (const variant of phrase.accents) {
-          await run(
-            'INSERT INTO accent_variants (phrase_id, variant) VALUES (?, ?)',
+          await client.query(
+            'INSERT INTO accent_variants (phrase_id, variant) VALUES ($1, $2)',
             [phraseId, variant]
           );
         }
 
         // Add mistakes
         for (const mistake of phrase.mistakes) {
-          await run(
-            'INSERT INTO mistakes (phrase_id, variant) VALUES (?, ?)',
+          await client.query(
+            'INSERT INTO mistakes (phrase_id, variant) VALUES ($1, $2)',
             [phraseId, mistake]
           );
         }
@@ -71,22 +60,130 @@ async function initDatabase() {
     }
 
     console.log('✅ Database initialized successfully!');
-    console.log(`📊 Database file: ${DB_PATH}`);
   } catch (error) {
     console.error('❌ Error initializing database:', error);
     process.exit(1);
   } finally {
-    await new Promise((resolve) => {
-      db.close(() => {
-        console.log('📁 Database connection closed');
-        resolve();
-      });
-    });
+    await client.end();
+    console.log('📁 Database connection closed');
   }
 }
 
-// Run initialization
-initDatabase().catch(err => {
-  console.error('Fatal error:', err);
-  process.exit(1);
-});
+async function initSqlite() {
+  console.log('🔌 Using SQLite for development');
+
+  try {
+    await fs.mkdir(DB_DIR, { recursive: true });
+  } catch (err) {
+    if (err.code !== 'EEXIST') throw err;
+  }
+
+  return new Promise((resolve, reject) => {
+    const sqlite = new sqlite3.Database(DB_PATH, async (err) => {
+      if (err) {
+        console.error('❌ Database connection error:', err);
+        reject(err);
+        return;
+      }
+
+      console.log('✅ Connected to SQLite at', DB_PATH);
+
+      try {
+        // Enable foreign keys
+        await new Promise((res, rej) => {
+          sqlite.run('PRAGMA foreign_keys = ON', (err) => {
+            if (err) rej(err);
+            else res();
+          });
+        });
+
+        // Create schema
+        console.log('📝 Creating schema...');
+        const schemaStatements = SQLITE_SCHEMA
+          .split(';')
+          .map(s => s.trim())
+          .filter(s => s.length > 0);
+
+        for (const statement of schemaStatements) {
+          await new Promise((res, rej) => {
+            sqlite.exec(statement, (err) => {
+              if (err) rej(err);
+              else res();
+            });
+          });
+        }
+        console.log('✅ Schema created');
+
+        // Insert initial data
+        console.log('🔄 Loading initial data...');
+        for (const phrase of INITIAL_DATA) {
+          const phraseResult = await new Promise((res, rej) => {
+            sqlite.run(
+              'INSERT OR IGNORE INTO phrases (el, ru) VALUES (?, ?)',
+              [phrase.el, phrase.ru],
+              function(err) {
+                if (err) rej(err);
+                else res({ id: this.lastID, changes: this.changes });
+              }
+            );
+          });
+
+          if (phraseResult.changes > 0) {
+            const phraseId = phraseResult.id;
+
+            // Add accent variants
+            for (const variant of phrase.accents) {
+              await new Promise((res, rej) => {
+                sqlite.run(
+                  'INSERT INTO accent_variants (phrase_id, variant) VALUES (?, ?)',
+                  [phraseId, variant],
+                  (err) => {
+                    if (err) rej(err);
+                    else res();
+                  }
+                );
+              });
+            }
+
+            // Add mistakes
+            for (const mistake of phrase.mistakes) {
+              await new Promise((res, rej) => {
+                sqlite.run(
+                  'INSERT INTO mistakes (phrase_id, variant) VALUES (?, ?)',
+                  [phraseId, mistake],
+                  (err) => {
+                    if (err) rej(err);
+                    else res();
+                  }
+                );
+              });
+            }
+          }
+        }
+
+        console.log('✅ Database initialized successfully!');
+        sqlite.close();
+        resolve();
+      } catch (error) {
+        console.error('❌ Error initializing database:', error);
+        sqlite.close();
+        reject(error);
+      }
+    });
+  });
+}
+
+async function initDatabase() {
+  try {
+    if (usePostgres) {
+      await initPostgres();
+    } else {
+      await initSqlite();
+    }
+  } catch (error) {
+    console.error('Fatal error:', error);
+    process.exit(1);
+  }
+}
+
+initDatabase();

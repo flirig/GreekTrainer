@@ -31,15 +31,19 @@ app.get('/api/health', (req, res) => {
 // Start server
 const startServer = async () => {
   try {
+    console.log('🔧 Initializing database...');
     // Ensure database is initialized
-    await db.init();
+    const database = await db.init();
+    console.log('✅ Database initialized');
 
     app.listen(PORT, () => {
       console.log(`✅ Server running on port ${PORT}`);
       console.log(`🌐 Open http://localhost:${PORT}`);
+      console.log('📊 API: http://localhost:${PORT}/api/phrases');
     });
   } catch (err) {
     console.error('❌ Server startup failed:', err);
+    console.error('Stack:', err.stack);
     process.exit(1);
   }
 };

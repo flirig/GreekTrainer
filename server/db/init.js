@@ -15,10 +15,12 @@ async function initDatabase() {
   // Ensure data directory exists
   try {
     await fs.mkdir(DB_DIR, { recursive: true });
+    console.log('📁 Data directory:', DB_DIR);
   } catch (err) {
-    console.error('Error creating data directory:', err);
+    console.error('❌ Error creating data directory:', err);
   }
 
+  console.log('🔌 Opening database at:', DB_PATH);
   const db = new sqlite3.Database(DB_PATH);
   const run = promisify(db.run.bind(db));
   const all = promisify(db.all.bind(db));

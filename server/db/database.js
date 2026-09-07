@@ -52,21 +52,27 @@ async function ensureDataDir() {
 async function initDb() {
   if (dbInstance) return dbInstance;
 
+  console.log('📁 Database path:', DB_PATH);
   await ensureDataDir();
 
   return new Promise((resolve, reject) => {
+    console.log('🔌 Connecting to SQLite...');
     const sqlite = new sqlite3.Database(DB_PATH, async (err) => {
       if (err) {
+        console.error('❌ Database connection error:', err);
         reject(new Error(`Database connection error: ${err.message}`));
         return;
       }
 
+      console.log('✅ Connected to SQLite');
       const database = new Database(sqlite);
       try {
         await database.exec('PRAGMA foreign_keys = ON');
+        console.log('✅ Pragmas set');
         dbInstance = database;
         resolve(database);
       } catch (error) {
+        console.error('❌ Database setup error:', error);
         reject(error);
       }
     });

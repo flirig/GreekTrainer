@@ -23,7 +23,6 @@ async function initDatabase() {
   console.log('🔌 Opening database at:', DB_PATH);
   const db = new sqlite3.Database(DB_PATH);
   const run = promisify(db.run.bind(db));
-  const all = promisify(db.all.bind(db));
 
   try {
     console.log('📝 Creating schema...');
@@ -86,13 +85,8 @@ async function initDatabase() {
   }
 }
 
-// Run if executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  initDatabase().catch(err => {
-    console.error('Fatal error:', err);
-    process.exit(1);
-  });
-} else {
-  // Export for use in start script
-  export default initDatabase;
-}
+// Run initialization
+initDatabase().catch(err => {
+  console.error('Fatal error:', err);
+  process.exit(1);
+});

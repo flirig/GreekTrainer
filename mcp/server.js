@@ -351,6 +351,68 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
+        name: "init_word_data",
+        description: "Initialize grammar rules and update word translations (requires admin)",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+      {
+        name: "get_random_word",
+        description: "Get a random word for exercises",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+      {
+        name: "get_word_options",
+        description: "Get translation options for a word (multiple choice)",
+        inputSchema: {
+          type: "object",
+          properties: {
+            wordId: {
+              type: "number",
+              description: "Word ID",
+            },
+          },
+          required: ["wordId"],
+        },
+      },
+      {
+        name: "record_word_exercise",
+        description: "Record word exercise result",
+        inputSchema: {
+          type: "object",
+          properties: {
+            wordId: {
+              type: "number",
+              description: "Word ID",
+            },
+            isCorrect: {
+              type: "boolean",
+              description: "Whether the answer was correct",
+            },
+          },
+          required: ["wordId", "isCorrect"],
+        },
+      },
+      {
+        name: "get_words_by_rule",
+        description: "Get all words for a specific grammar rule",
+        inputSchema: {
+          type: "object",
+          properties: {
+            ruleId: {
+              type: "number",
+              description: "Grammar rule ID",
+            },
+          },
+          required: ["ruleId"],
+        },
+      },
+      {
         name: "get_lists",
         description: "Get all word lists",
         inputSchema: {
@@ -696,11 +758,35 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "extract_words": {
-        result = {
-          message: "Word extraction should be run server-side",
-          command: "node server/utils/extract-words.js",
-          description: "Extracts words from existing phrases and populates words table"
-        };
+        result = await apiCall("POST", "/extract-words", {}, true);
+        break;
+      }
+
+      case "init_word_data": {
+        result = await apiCall("POST", "/init-word-data", {}, true);
+        break;
+      }
+
+      case "get_random_word": {
+        result = await apiCall("GET", "/word-exercises/random");
+        break;
+      }
+
+      case "get_word_options": {
+        result = await apiCall("GET", `/word-exercises/options/${args.wordId}`);
+        break;
+      }
+
+      case "record_word_exercise": {
+        result = await apiCall("POST", "/word-exercises/result", {
+          wordId: args.wordId,
+          isCorrect: args.isCorrect
+        });
+        break;
+      }
+
+      case "get_words_by_rule": {
+        result = await apiCall("GET", `/word-exercises/by-rule/${args.ruleId}`);
         break;
       }
 

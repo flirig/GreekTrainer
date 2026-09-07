@@ -8,9 +8,11 @@ import authRouter from './routes/auth.js';
 import wordsRouter from './routes/words.js';
 import listsRouter from './routes/lists.js';
 import rulesRouter from './routes/rules.js';
+import wordExercisesRouter from './routes/word-exercises.js';
 import { verifyToken, requireAdmin } from './middleware/auth.js';
 import db from './db/database.js';
 import { extractWordsFromPhrases } from './utils/extract-words.js';
+import { initializeWordData } from './utils/init-word-data.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -37,6 +39,7 @@ app.use('/api/words', wordsRouter);
 app.use('/api/rules', rulesRouter);
 app.use('/api/lists', listsRouter);
 app.use('/api/exercises', exercisesRouter);
+app.use('/api/word-exercises', wordExercisesRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -51,6 +54,18 @@ app.post('/api/extract-words', verifyToken, requireAdmin, async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error('❌ Extraction error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Initialize word data (grammar rules, translations, etc) (admin only)
+app.post('/api/init-word-data', verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const database = await db.get();
+    const result = await initializeWordData(database);
+    res.json(result);
+  } catch (error) {
+    console.error('❌ Initialization error:', error);
     res.status(500).json({ error: error.message });
   }
 });

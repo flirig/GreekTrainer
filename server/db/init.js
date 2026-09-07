@@ -77,9 +77,22 @@ async function initDatabase() {
     console.error('❌ Error initializing database:', error);
     process.exit(1);
   } finally {
-    db.close();
+    await new Promise((resolve) => {
+      db.close(() => {
+        console.log('📁 Database connection closed');
+        resolve();
+      });
+    });
   }
 }
 
-// Export for use in start script
-export default initDatabase;
+// Run if executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  initDatabase().catch(err => {
+    console.error('Fatal error:', err);
+    process.exit(1);
+  });
+} else {
+  // Export for use in start script
+  export default initDatabase;
+}

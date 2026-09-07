@@ -6,8 +6,6 @@ import db from '../db/database.js';
  * Returns statistics about extraction
  */
 export async function extractWordsFromPhrases(database) {
-  const database = await db.get();
-
   try {
     console.log('📚 Fetching all phrases...');
     const phrases = await database.all('SELECT id, el FROM phrases');

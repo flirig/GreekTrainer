@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админка - Греческий тренажер</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { color: #2c3e50; margin-bottom: 30px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .logout-btn { background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .logout-btn:hover { background: #c0392b; }
+
+        .section { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .section h2 { color: #2980b9; margin-bottom: 20px; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 14px; font-family: Arial, sans-serif; }
+        textarea { min-height: 80px; resize: vertical; }
+        input:focus, textarea:focus { outline: none; border-color: #3498db; box-shadow: 0 0 5px rgba(52, 152, 219, 0.3); }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-row textarea { grid-column: 1 / -1; }
+
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; transition: background 0.3s; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-primary:hover { background: #2980b9; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-success { background: #2ecc71; color: white; }
+        .btn-success:hover { background: #27ae60; }
+
+        .phrases-list { max-height: 400px; overflow-y: auto; }
+        .phrase-item { background: #f9f9f9; padding: 15px; border-left: 4px solid #3498db; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .phrase-content { flex-grow: 1; }
+        .phrase-el { font-size: 16px; font-weight: bold; color: #2980b9; }
+        .phrase-ru { font-size: 13px; color: #7f8c8d; margin-top: 5px; }
+        .phrase-actions { display: flex; gap: 10px; }
+        .btn-delete { padding: 5px 10px; font-size: 12px; }
+
+        .toast { visibility: hidden; min-width: 250px; background-color: rgba(44, 62, 80, 0.95); color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 100; left: 50%; bottom: 30px; font-size: 16px; transform: translateX(-50%); font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+
+        .loading { text-align: center; color: #7f8c8d; padding: 20px; }
+        .error { background: #fadbd8; color: #c0392b; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ Админ-панель</h1>
+            <div>
+                <span id="admin-email" style="margin-right: 20px;"></span>
+                <button class="logout-btn" onclick="logout()">Выход</button>
+            </div>
+        </div>
+
+        <div id="error-msg" class="error" style="display: none;"></div>
+
+        <!-- Добавить новую фразу -->
+        <div class="section">
+            <h2>➕ Добавить новую фразу</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="el">Греческая фраза</label>
+                    <input type="text" id="el" placeholder="π.χ. δίπλα στην πλατεία" />
+                </div>
+                <div class="form-group">
+                    <label for="ru">Русский перевод</label>
+                    <input type="text" id="ru" placeholder="рядом с площадью" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="accents">Варианты с ударениями (через запятую)</label>
+                <textarea id="accents" placeholder="διπλά στην πλατεία, δίπλα στήν πλατεία"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="mistakes">Варианты ошибок (через запятую)</label>
+                <textarea id="mistakes" placeholder="δίπλα στο πλατεία, δίπλα στην πλατία"></textarea>
+            </div>
+
+            <button class="btn btn-success" onclick="addPhrase()">Добавить фразу</button>
+        </div>
+
+        <!-- Список фраз -->
+        <div class="section">
+            <h2>📚 Все фразы</h2>
+            <div id="phrases-list" class="phrases-list">
+                <div class="loading">Загрузка фраз...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        const API_URL = '/api';
+        let token = localStorage.getItem('token');
+        let currentUser = null;
+
+        function showError(msg) {
+            const err = document.getElementById('error-msg');
+            err.textContent = msg;
+            err.style.display = 'block';
+            setTimeout(() => { err.style.display = 'none'; }, 5000);
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = "toast show";
+            setTimeout(() => { t.className = t.className.replace("show", ""); }, 2800);
+        }
+
+        async function checkAuth() {
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!res.ok) {
+                    localStorage.removeItem('token');
+                    window.location.href = '/';
+                    return;
+                }
+
+                const data = await res.json();
+                currentUser = data.user;
+
+                if (!currentUser.is_admin) {
+                    showError('У вас нет доступа к админ-панели');
+                    setTimeout(() => { window.location.href = '/'; }, 2000);
+                    return;
+                }
+
+                document.getElementById('admin-email').textContent = currentUser.email;
+            } catch (error) {
+                console.error(error);
+                window.location.href = '/';
+            }
+        }
+
+        async function loadPhrases() {
+            try {
+                const res = await fetch(`${API_URL}/phrases`);
+                const phrases = await res.json();
+
+                const listDiv = document.getElementById('phrases-list');
+                listDiv.innerHTML = '';
+
+                if (phrases.length === 0) {
+                    listDiv.innerHTML = '<p style="text-align: center; color: #7f8c8d;">Нет фраз</p>';
+                    return;
+                }
+
+                for (const phrase of phrases) {
+                    const item = document.createElement('div');
+                    item.className = 'phrase-item';
+                    item.innerHTML = `
+                        <div class="phrase-content">
+                            <div class="phrase-el">${phrase.el}</div>
+                            <div class="phrase-ru">${phrase.ru}</div>
+                        </div>
+                        <div class="phrase-actions">
+                            <button class="btn btn-danger btn-delete" onclick="deletePhrase(${phrase.id})">Удалить</button>
+                        </div>
+                    `;
+                    listDiv.appendChild(item);
+                }
+            } catch (error) {
+                console.error(error);
+                showError('Ошибка загрузки фраз');
+            }
+        }
+
+        async function addPhrase() {
+            const el = document.getElementById('el').value.trim();
+            const ru = document.getElementById('ru').value.trim();
+            const accents = document.getElementById('accents').value
+                .split(',')
+                .map(s => s.trim())
+                .filter(s => s);
+            const mistakes = document.getElementById('mistakes').value
+                .split(',')
+                .map(s => s.trim())
+                .filter(s => s);
+
+            if (!el || !ru) {
+                showError('Заполните греческую фразу и перевод');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/phrases`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ el, ru, wAccents: accents, mistakes })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    showError(err.error || 'Ошибка добавления фразы');
+                    return;
+                }
+
+                document.getElementById('el').value = '';
+                document.getElementById('ru').value = '';
+                document.getElementById('accents').value = '';
+                document.getElementById('mistakes').value = '';
+
+                showToast('Фраза добавлена! ✅');
+                loadPhrases();
+            } catch (error) {
+                console.error(error);
+                showError('Ошибка подключения');
+            }
+        }
+
+        async function deletePhrase(id) {
+            if (!confirm('Вы уверены? Эта фраза будет удалена безвозвратно.')) return;
+
+            try {
+                const res = await fetch(`${API_URL}/phrases/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!res.ok) {
+                    showError('Ошибка удаления фразы');
+                    return;
+                }
+
+                showToast('Фраза удалена ✅');
+                loadPhrases();
+            } catch (error) {
+                console.error(error);
+                showError('Ошибка подключения');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        }
+
+        // Initialize
+        checkAuth();
+        loadPhrases();
+    </script>
+</body>
+</html>

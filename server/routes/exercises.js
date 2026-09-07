@@ -1,5 +1,8 @@
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import db from '../db/database.js';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-change-in-production';
 
 const router = express.Router();
 
@@ -49,7 +52,18 @@ router.get('/random', async (req, res) => {
 // POST exercise result
 router.post('/result', async (req, res) => {
   try {
-    const { userId = 'anonymous', phraseId, exerciseType, isCorrect } = req.body;
+    const { phraseId, exerciseType, isCorrect } = req.body;
+    const token = req.headers.authorization?.split(' ')[1];
+
+    let userId = 'anonymous';
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        userId = String(decoded.id);
+      } catch (e) {
+        // Ignore token errors, fall back to anonymous
+      }
+    }
 
     if (!phraseId || !exerciseType) {
       return res.status(400).json({ error: 'Missing required fields' });

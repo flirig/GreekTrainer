@@ -58,9 +58,57 @@
 
         .loading { text-align: center; color: #7f8c8d; }
         .error { background: #fadbd8; color: #c0392b; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+
+        /* Auth Форма */
+        .auth-container { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; display: none; }
+        .auth-container.show { display: block; }
+        .auth-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .auth-tab { flex: 1; padding: 10px; background: #e0e0e0; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        .auth-tab.active { background: #3498db; color: white; }
+        .auth-form { display: none; }
+        .auth-form.active { display: block; }
+        .auth-form input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 14px; box-sizing: border-box; }
+        .auth-form button { width: 100%; padding: 10px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .auth-form button:hover { background: #2980b9; }
+        .auth-status { text-align: right; margin-bottom: 15px; font-size: 13px; }
+        .user-info { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .user-info span { font-size: 14px; color: #555; }
+        .logout-btn { background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        .logout-btn:hover { background: #c0392b; }
+        .admin-link { background: #9b59b6; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; text-decoration: none; display: inline-block; }
+        .admin-link:hover { background: #8e44ad; }
     </style>
 </head>
 <body>
+
+    <!-- Auth Container -->
+    <div id="auth-container" class="auth-container show">
+        <div class="auth-status" id="auth-status">
+            <button id="toggle-auth-btn" class="tab-btn" onclick="toggleAuth()" style="width: auto;">Вход / Регистрация</button>
+        </div>
+
+        <div id="login-form" class="auth-form active">
+            <h3 style="text-align: center; margin-top: 0;">Вход</h3>
+            <input type="email" id="login-email" placeholder="Email" />
+            <input type="password" id="login-password" placeholder="Пароль" />
+            <button onclick="login()">Войти</button>
+        </div>
+
+        <div id="register-form" class="auth-form">
+            <h3 style="text-align: center; margin-top: 0;">Регистрация</h3>
+            <input type="email" id="register-email" placeholder="Email" />
+            <input type="password" id="register-password" placeholder="Пароль (минимум 6 символов)" />
+            <button onclick="register()">Зарегистрироваться</button>
+        </div>
+
+        <div id="user-info" class="user-info" style="display: none;">
+            <span id="user-email"></span>
+            <div>
+                <a id="admin-link-btn" class="admin-link" href="/admin" target="_blank" style="display: none;">Админка</a>
+                <button class="logout-btn" onclick="logout()">Выход</button>
+            </div>
+        </div>
+    </div>
 
     <h1>Греческий тренажер: PRO MAX</h1>
 
@@ -468,7 +516,140 @@
             });
         }
 
+        // Auth Functions
+        let token = localStorage.getItem('token');
+        let currentUser = null;
+
+        function updateAuthUI() {
+            const authContainer = document.getElementById('auth-container');
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const userInfo = document.getElementById('user-info');
+            const authStatus = document.getElementById('auth-status');
+
+            if (token) {
+                loginForm.classList.remove('active');
+                registerForm.classList.remove('active');
+                authStatus.style.display = 'none';
+                userInfo.style.display = 'flex';
+                document.getElementById('user-email').textContent = currentUser?.email || 'Пользователь';
+
+                if (currentUser?.is_admin) {
+                    document.getElementById('admin-link-btn').style.display = 'inline-block';
+                }
+            } else {
+                loginForm.classList.add('active');
+                registerForm.classList.remove('active');
+                authStatus.style.display = 'block';
+                userInfo.style.display = 'none';
+                currentUser = null;
+            }
+        }
+
+        function toggleAuth() {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+
+            if (loginForm.classList.contains('active')) {
+                loginForm.classList.remove('active');
+                registerForm.classList.add('active');
+            } else {
+                loginForm.classList.add('active');
+                registerForm.classList.remove('active');
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            if (!email || !password) {
+                showToast('Email и пароль обязательны');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    showToast(err.error || 'Ошибка входа');
+                    return;
+                }
+
+                const data = await res.json();
+                token = data.token;
+                currentUser = data.user;
+                localStorage.setItem('token', token);
+
+                document.getElementById('login-email').value = '';
+                document.getElementById('login-password').value = '';
+
+                updateAuthUI();
+                showToast(`Добро пожаловать, ${email}! 👋`);
+            } catch (error) {
+                showToast('Ошибка подключения');
+                console.error(error);
+            }
+        }
+
+        async function register() {
+            const email = document.getElementById('register-email').value.trim();
+            const password = document.getElementById('register-password').value;
+
+            if (!email || !password) {
+                showToast('Email и пароль обязательны');
+                return;
+            }
+
+            if (password.length < 6) {
+                showToast('Пароль должен быть минимум 6 символов');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    showToast(err.error || 'Ошибка регистрации');
+                    return;
+                }
+
+                const data = await res.json();
+                token = data.token;
+                currentUser = data.user;
+                localStorage.setItem('token', token);
+
+                document.getElementById('register-email').value = '';
+                document.getElementById('register-password').value = '';
+
+                updateAuthUI();
+                showToast(`Добро пожаловать, ${email}! 🎉`);
+            } catch (error) {
+                showToast('Ошибка подключения');
+                console.error(error);
+            }
+        }
+
+        function logout() {
+            token = null;
+            currentUser = null;
+            localStorage.removeItem('token');
+            updateAuthUI();
+            showToast('Вы вышли из аккаунта');
+        }
+
         // Initialize
+        updateAuthUI();
         loadPhrases();
     </script>
 </body>

@@ -1,6 +1,7 @@
 import sqlite3 from 'sqlite3';
 import pg from 'pg';
 const { Client } = pg;
+import bcrypt from 'bcrypt';
 import { SQLITE_SCHEMA, POSTGRES_SCHEMA, INITIAL_DATA } from './schema.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -12,6 +13,34 @@ const DB_DIR = join(__dirname, '../../data');
 const DB_PATH = join(DB_DIR, 'trainer.db');
 
 const usePostgres = !!process.env.DATABASE_URL;
+const DEFAULT_ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@greektrainer.local';
+const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+
+async function ensureAdminUser(queryFn) {
+  try {
+    console.log('🔐 Checking for admin user...');
+    const existing = await queryFn('SELECT id FROM users WHERE is_admin = ?', [1], true);
+
+    if (existing) {
+      console.log('✅ Admin user already exists');
+      return;
+    }
+
+    console.log('📝 Creating default admin user...');
+    const password_hash = await bcrypt.hash(DEFAULT_ADMIN_PASSWORD, 10);
+    await queryFn(
+      'INSERT INTO users (email, password_hash, is_admin) VALUES (?, ?, ?)',
+      [DEFAULT_ADMIN_EMAIL, password_hash, 1],
+      false
+    );
+
+    console.log(`✅ Admin user created: ${DEFAULT_ADMIN_EMAIL}`);
+    console.log(`⚠️  Default password: ${DEFAULT_ADMIN_PASSWORD}`);
+    console.log(`⚠️  PLEASE CHANGE THE PASSWORD IN PRODUCTION!`);
+  } catch (error) {
+    console.error('⚠️  Could not create admin user:', error.message);
+  }
+}
 
 async function initPostgres() {
   console.log('🔌 Connecting to PostgreSQL...');
@@ -58,6 +87,16 @@ async function initPostgres() {
         }
       }
     }
+
+    // Create default admin user
+    await ensureAdminUser(async (sql, params, isGet) => {
+      if (isGet) {
+        const result = await client.query(sql, params);
+        return result.rows[0] || null;
+      } else {
+        return await client.query(sql, params);
+      }
+    });
 
     console.log('✅ Database initialized successfully!');
   } catch (error) {
@@ -160,6 +199,23 @@ async function initSqlite() {
             }
           }
         }
+
+        // Create default admin user
+        await ensureAdminUser(async (sql, params, isGet) => {
+          return new Promise((res, rej) => {
+            if (isGet) {
+              sqlite.get(sql, params, (err, row) => {
+                if (err) rej(err);
+                else res(row || null);
+              });
+            } else {
+              sqlite.run(sql, params, (err) => {
+                if (err) rej(err);
+                else res();
+              });
+            }
+          });
+        });
 
         console.log('✅ Database initialized successfully!');
         sqlite.close();

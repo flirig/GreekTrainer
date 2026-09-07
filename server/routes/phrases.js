@@ -1,5 +1,6 @@
 import express from 'express';
 import db from '../db/database.js';
+import { verifyToken, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -54,8 +55,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST new phrase
-router.post('/', async (req, res) => {
+// POST new phrase (admin only)
+router.post('/', verifyToken, requireAdmin, async (req, res) => {
   try {
     const { el, ru, wAccents = [], mistakes = [] } = req.body;
 
@@ -108,8 +109,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// DELETE phrase
-router.delete('/:id', async (req, res) => {
+// DELETE phrase (admin only)
+router.delete('/:id', verifyToken, requireAdmin, async (req, res) => {
   try {
     const database = await db.get();
 

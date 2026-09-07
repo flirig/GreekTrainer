@@ -4,6 +4,8 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import phrasesRouter from './routes/phrases.js';
 import exercisesRouter from './routes/exercises.js';
+import authRouter from './routes/auth.js';
+import { verifyToken } from './middleware/auth.js';
 import db from './db/database.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -19,7 +21,13 @@ app.use(express.json());
 // Serve static files
 app.use(express.static(join(__dirname, '../public')));
 
+// Admin panel
+app.get('/admin', (req, res) => {
+  res.sendFile(join(__dirname, '../public/admin.html'));
+});
+
 // API Routes
+app.use('/api/auth', authRouter);
 app.use('/api/phrases', phrasesRouter);
 app.use('/api/exercises', exercisesRouter);
 

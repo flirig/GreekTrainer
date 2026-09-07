@@ -3,8 +3,9 @@ import db from '../db/database.js';
 /**
  * Extract words from Greek phrases and add them to database
  * Groups words by part of speech and assigns grammar rules
+ * Returns statistics about extraction
  */
-async function extractWordsFromPhrases() {
+export async function extractWordsFromPhrases(database) {
   const database = await db.get();
 
   try {
@@ -90,15 +91,35 @@ async function extractWordsFromPhrases() {
       }
     }
 
+    const result = {
+      success: true,
+      added,
+      skipped,
+      total: wordMap.size,
+      message: `Extraction complete: Added ${added} words, Skipped ${skipped} common words`
+    };
+
     console.log(`\n✅ Extraction complete!`);
     console.log(`   Added: ${added} words`);
     console.log(`   Skipped: ${skipped} common words`);
     console.log(`   Total unique: ${wordMap.size}`);
+
+    return result;
   } catch (error) {
     console.error('❌ Error extracting words:', error);
-    process.exit(1);
+    throw error;
   }
 }
 
-// Run extraction
-extractWordsFromPhrases();
+// If run directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const dbModule = await import('../db/database.js');
+  const db = dbModule.default;
+  const database = await db.get();
+  try {
+    await extractWordsFromPhrases(database);
+    process.exit(0);
+  } catch (error) {
+    process.exit(1);
+  }
+}

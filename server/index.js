@@ -8,8 +8,9 @@ import authRouter from './routes/auth.js';
 import wordsRouter from './routes/words.js';
 import listsRouter from './routes/lists.js';
 import rulesRouter from './routes/rules.js';
-import { verifyToken } from './middleware/auth.js';
+import { verifyToken, requireAdmin } from './middleware/auth.js';
 import db from './db/database.js';
+import { extractWordsFromPhrases } from './utils/extract-words.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -40,6 +41,18 @@ app.use('/api/exercises', exercisesRouter);
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Extract words from phrases (admin only)
+app.post('/api/extract-words', verifyToken, requireAdmin, async (req, res) => {
+  try {
+    const database = await db.get();
+    const result = await extractWordsFromPhrases(database);
+    res.json(result);
+  } catch (error) {
+    console.error('❌ Extraction error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Start server

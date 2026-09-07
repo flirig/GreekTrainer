@@ -5,7 +5,6 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
-  TextContent,
 } from "@modelcontextprotocol/sdk/types.js";
 
 const API_URL = process.env.API_URL || "http://localhost:3000/api";

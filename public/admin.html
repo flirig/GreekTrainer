@@ -121,7 +121,8 @@
 
         async function checkAuth() {
             if (!token) {
-                window.location.href = '/';
+                showError('⚠️ Токен не найден. Пожалуйста, войдите в аккаунт.');
+                setTimeout(() => { window.location.href = '/'; }, 2000);
                 return;
             }
 
@@ -131,8 +132,10 @@
                 });
 
                 if (!res.ok) {
+                    console.error('Auth failed:', res.status);
                     localStorage.removeItem('token');
-                    window.location.href = '/';
+                    showError('⚠️ Сессия истекла. Пожалуйста, войдите заново.');
+                    setTimeout(() => { window.location.href = '/'; }, 2000);
                     return;
                 }
 
@@ -140,15 +143,15 @@
                 currentUser = data.user;
 
                 if (!currentUser.is_admin) {
-                    showError('У вас нет доступа к админ-панели');
+                    showError('❌ Доступ запрещен: требуются права администратора');
                     setTimeout(() => { window.location.href = '/'; }, 2000);
                     return;
                 }
 
                 document.getElementById('admin-email').textContent = currentUser.email;
             } catch (error) {
-                console.error(error);
-                window.location.href = '/';
+                console.error('Error during auth check:', error);
+                showError('❌ Ошибка подключения. Проверьте консоль.');
             }
         }
 

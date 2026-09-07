@@ -1,7 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
 import db from '../db/database.js';
-import { createToken } from '../middleware/auth.js';
+import { createToken, verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -81,19 +81,8 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.get('/me', async (req, res) => {
-  try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'No token' });
-    }
-
-    // If we got here, token was verified by middleware
-    // Just return user info from token
-    res.json({ user: req.user });
-  } catch (error) {
-    res.status(401).json({ error: 'Invalid token' });
-  }
+router.get('/me', verifyToken, async (req, res) => {
+  res.json({ user: req.user });
 });
 
 export default router;

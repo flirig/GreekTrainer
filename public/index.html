@@ -119,6 +119,7 @@
         <button class="tab-btn" onclick="switchTab('ex4', this)">На слух</button>
         <button class="tab-btn" onclick="switchTab('ex6', this)">Ударения</button>
         <button class="tab-btn" onclick="switchTab('ex7', this)">Ошибки</button>
+        <button class="tab-btn" onclick="switchTab('conjugation', this)">📖 Правила</button>
         <button class="tab-btn mix-btn active" onclick="switchTab('mix', this)">🔥 МИКС</button>
     </div>
 
@@ -139,6 +140,40 @@
 
     <!-- Ударения -->
     <div id="ex6" class="tab-content"><div class="exercise-box"><div class="question">Выберите фразу с правильным ударением:<br><span id="ex6-ru" style="font-size:14px;font-weight:normal;"></span></div><div id="ex6-options" class="options-grid"></div><div id="ex6-feedback" class="feedback"></div><button id="ex6-next" class="next-btn" onclick="onNext('ex6')">Дальше ➡️</button></div></div>
+
+    <!-- Правила - Конъюгация -->
+    <div id="conjugation" class="tab-content">
+        <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <div id="conjugation-rule" style="margin-bottom: 20px;">
+                <h3 id="rule-name" style="color: #2980b9; margin-top: 0;">Загрузка...</h3>
+                <p id="rule-description" style="color: #7f8c8d;"></p>
+            </div>
+
+            <div id="conjugation-exercise" class="exercise-box" style="display: none;">
+                <div id="conj-question" class="question"></div>
+                <div id="conj-options" class="options-grid"></div>
+                <div id="conj-feedback" class="feedback"></div>
+                <button id="conj-next" class="next-btn" onclick="nextConjugation()">Дальше ➡️</button>
+            </div>
+
+            <div id="conjugation-table" style="overflow-x: auto; margin-top: 20px;">
+                <table style="width: 100%; border-collapse: collapse; border: 1px solid #e0e0e0;">
+                    <thead style="background: #f0f0f0;">
+                        <tr>
+                            <th style="padding: 10px; text-align: left; border: 1px solid #e0e0e0;">Лицо</th>
+                            <th style="padding: 10px; text-align: left; border: 1px solid #e0e0e0;">Форма</th>
+                            <th style="padding: 10px; text-align: left; border: 1px solid #e0e0e0;">Перевод</th>
+                        </tr>
+                    </thead>
+                    <tbody id="conj-table-body"></tbody>
+                </table>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="tab-btn" onclick="loadConjugationExercise()" style="padding: 12px 25px;">Начать упражнение 🎯</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Ошибки -->
     <div id="ex7" class="tab-content"><div class="exercise-box"><div class="question">Где НЕТ ошибки?<br><span id="ex7-ru" style="font-size:14px;font-weight:normal;"></span></div><div id="ex7-options" class="options-grid"></div><div id="ex7-feedback" class="feedback"></div><button id="ex7-next" class="next-btn" onclick="onNext('ex7')">Дальше ➡️</button></div></div>
@@ -516,6 +551,102 @@
             });
         }
 
+        // Conjugation Functions
+        let conjugationRule = null;
+        let currentConjugation = null;
+
+        async function loadConjugationRule() {
+            try {
+                const res = await fetch(`${API_URL}/conjugation/rule`);
+                conjugationRule = await res.json();
+                document.getElementById('rule-name').textContent = conjugationRule.name;
+                document.getElementById('rule-description').textContent = conjugationRule.description;
+
+                // Fill table
+                const tbody = document.getElementById('conj-table-body');
+                tbody.innerHTML = '';
+                for (const conj of conjugationRule.conjugations) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="padding: 10px; border: 1px solid #e0e0e0;"><strong>${conj.person}</strong><br><small>${conj.pronoun}</small></td>
+                        <td style="padding: 10px; border: 1px solid #e0e0e0; font-size: 16px; font-weight: bold; color: #2980b9;">${conj.form}</td>
+                        <td style="padding: 10px; border: 1px solid #e0e0e0;">${conj.translation}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            } catch (error) {
+                console.error('Error loading rule:', error);
+                showToast('Ошибка загрузки правила');
+            }
+        }
+
+        async function loadConjugationExercise() {
+            try {
+                document.getElementById('conjugation-exercise').style.display = 'block';
+                document.getElementById('conjugation-table').style.display = 'none';
+
+                const res = await fetch(`${API_URL}/conjugation/random`);
+                currentConjugation = await res.json();
+
+                document.getElementById('conj-question').innerHTML = `
+                    Выберите правильную форму для:<br><strong>${currentConjugation.person}</strong> (${currentConjugation.pronoun})
+                `;
+                document.getElementById('conj-feedback').textContent = '';
+                document.getElementById('conj-next').style.display = 'none';
+
+                const cont = document.getElementById('conj-options');
+                cont.innerHTML = '';
+
+                // Get options with another call
+                const optRes = await fetch(`${API_URL}/conjugation/exercise/${currentConjugation.person}`);
+                const optData = await optRes.json();
+
+                const options = shuffle(optData.options);
+                options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    btn.textContent = opt;
+                    btn.onclick = async () => {
+                        cont.querySelectorAll('button').forEach(b => b.disabled = true);
+                        const isCorrect = opt === currentConjugation.correctForm;
+
+                        if (isCorrect) {
+                            btn.classList.add('correct');
+                            document.getElementById('conj-feedback').textContent = '✅ Верно!';
+                            document.getElementById('conj-feedback').className = 'feedback success';
+                        } else {
+                            btn.classList.add('wrong');
+                            document.getElementById('conj-feedback').innerHTML = `
+                                <div>❌ Ошибка</div>
+                                <div class="feedback-correct">✅ ${currentConjugation.correctForm}</div>
+                            `;
+                            document.getElementById('conj-feedback').className = 'feedback error';
+                        }
+
+                        document.getElementById('conj-next').style.display = 'block';
+
+                        // Record result
+                        await fetch(`${API_URL}/conjugation/result`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': token ? `Bearer ${token}` : ''
+                            },
+                            body: JSON.stringify({ person: currentConjugation.person, isCorrect })
+                        });
+                    };
+                    cont.appendChild(btn);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Ошибка загрузки упражнения');
+            }
+        }
+
+        function nextConjugation() {
+            loadConjugationExercise();
+        }
+
         // Auth Functions
         let token = localStorage.getItem('token');
         let currentUser = null;
@@ -651,6 +782,7 @@
         // Initialize
         updateAuthUI();
         loadPhrases();
+        loadConjugationRule();
     </script>
 </body>
 </html>

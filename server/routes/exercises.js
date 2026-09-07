@@ -16,23 +16,42 @@ function shuffle(array) {
 router.get('/random', async (req, res) => {
   try {
     const database = await db.get();
-    const phrase = await database.get(
-      'SELECT id, el, ru FROM phrases ORDER BY RANDOM() LIMIT 1'
-    );
+
+    const phrase = await new Promise((resolve, reject) => {
+      database.db.get(
+        'SELECT id, el, ru FROM phrases ORDER BY RANDOM() LIMIT 1',
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
 
     if (!phrase) {
       return res.status(404).json({ error: 'No phrases available' });
     }
 
-    const accents = await database.all(
-      'SELECT variant FROM accent_variants WHERE phrase_id = ?',
-      [phrase.id]
-    );
+    const accents = await new Promise((resolve, reject) => {
+      database.db.all(
+        'SELECT variant FROM accent_variants WHERE phrase_id = ?',
+        [phrase.id],
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows || []);
+        }
+      );
+    });
 
-    const mistakes = await database.all(
-      'SELECT variant FROM mistakes WHERE phrase_id = ?',
-      [phrase.id]
-    );
+    const mistakes = await new Promise((resolve, reject) => {
+      database.db.all(
+        'SELECT variant FROM mistakes WHERE phrase_id = ?',
+        [phrase.id],
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows || []);
+        }
+      );
+    });
 
     res.json({
       ...phrase,
@@ -40,6 +59,7 @@ router.get('/random', async (req, res) => {
       mistakes: mistakes.map(m => m.variant)
     });
   } catch (error) {
+    console.error('❌ Error fetching random phrase:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -54,19 +74,31 @@ router.post('/result', async (req, res) => {
     }
 
     const database = await db.get();
-    await database.run(
-      'INSERT INTO user_progress (user_id, phrase_id, exercise_type, is_correct) VALUES (?, ?, ?, ?)',
-      [userId, phraseId, exerciseType, isCorrect ? 1 : 0]
-    );
+
+    await new Promise((resolve, reject) => {
+      database.db.run(
+        'INSERT INTO user_progress (user_id, phrase_id, exercise_type, is_correct) VALUES (?, ?, ?, ?)',
+        [userId, phraseId, exerciseType, isCorrect ? 1 : 0],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
 
     // Get user stats
-    const stats = await database.get(`
-      SELECT
-        COUNT(*) as total,
-        SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) as correct
-      FROM user_progress
-      WHERE user_id = ?
-    `, [userId]);
+    const stats = await new Promise((resolve, reject) => {
+      database.db.get(`
+        SELECT
+          COUNT(*) as total,
+          SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) as correct
+        FROM user_progress
+        WHERE user_id = ?
+      `, [userId], (err, row) => {
+        if (err) reject(err);
+        else resolve(row || { total: 0, correct: 0 });
+      });
+    });
 
     res.json({
       message: 'Result recorded',
@@ -77,6 +109,7 @@ router.post('/result', async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('❌ Error recording result:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -85,24 +118,35 @@ router.post('/result', async (req, res) => {
 router.get('/stats/:userId', async (req, res) => {
   try {
     const database = await db.get();
-    const stats = await database.get(`
-      SELECT
-        COUNT(*) as total,
-        SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) as correct,
-        COUNT(DISTINCT exercise_type) as exerciseTypes
-      FROM user_progress
-      WHERE user_id = ?
-    `, [req.params.userId]);
 
-    const byType = await database.all(`
-      SELECT
-        exercise_type,
-        COUNT(*) as total,
-        SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) as correct
-      FROM user_progress
-      WHERE user_id = ?
-      GROUP BY exercise_type
-    `, [req.params.userId]);
+    const stats = await new Promise((resolve, reject) => {
+      database.db.get(`
+        SELECT
+          COUNT(*) as total,
+          SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) as correct,
+          COUNT(DISTINCT exercise_type) as exerciseTypes
+        FROM user_progress
+        WHERE user_id = ?
+      `, [req.params.userId], (err, row) => {
+        if (err) reject(err);
+        else resolve(row || { total: 0, correct: 0, exerciseTypes: 0 });
+      });
+    });
+
+    const byType = await new Promise((resolve, reject) => {
+      database.db.all(`
+        SELECT
+          exercise_type,
+          COUNT(*) as total,
+          SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) as correct
+        FROM user_progress
+        WHERE user_id = ?
+        GROUP BY exercise_type
+      `, [req.params.userId], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows || []);
+      });
+    });
 
     res.json({
       overall: {
@@ -118,6 +162,7 @@ router.get('/stats/:userId', async (req, res) => {
       }))
     });
   } catch (error) {
+    console.error('❌ Error fetching stats:', error);
     res.status(500).json({ error: error.message });
   }
 });

@@ -73,10 +73,11 @@ async function initDatabase() {
     console.log(`📊 Database file: ${DB_PATH}`);
   } catch (error) {
     console.error('❌ Error initializing database:', error);
-    throw error;
+    process.exit(1);
   } finally {
     db.close();
   }
 }
 
-initDatabase().catch(console.error);
+// Export for use in start script
+export default initDatabase;

@@ -28,12 +28,20 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Initialize database and start server
-db.init().then(() => {
-  app.listen(PORT, () => {
-    console.log(`✅ Server running at http://localhost:${PORT}`);
-  });
-}).catch(err => {
-  console.error('❌ Database initialization failed:', err);
-  process.exit(1);
-});
+// Start server
+const startServer = async () => {
+  try {
+    // Ensure database is initialized
+    await db.init();
+
+    app.listen(PORT, () => {
+      console.log(`✅ Server running on port ${PORT}`);
+      console.log(`🌐 Open http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error('❌ Server startup failed:', err);
+    process.exit(1);
+  }
+};
+
+startServer();

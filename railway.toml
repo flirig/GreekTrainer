@@ -1,6 +1,5 @@
 [build]
-builder = "nixpacks"
-buildCommand = "npm install && npm run db:init"
+buildCommand = "npm install"
 
 [deploy]
 startCommand = "npm start"

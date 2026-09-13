@@ -545,6 +545,7 @@
     function loadTrainers() {
         const trainers = [
             { name: 'Словарь', icon: '📚', id: 'vocabulary' },
+            { name: 'Словарь БД', icon: '🗂️', id: 'database-vocab' },
             { name: 'Подстановка', icon: '✏️', id: 'substitution' },
             { name: 'Перевод', icon: '🌐', id: 'translation' },
             { name: 'Аудио', icon: '🔊', id: 'audio' },
@@ -695,6 +696,8 @@
 
         if (trainerId === 'vocabulary') {
             showVocabulary(container);
+        } else if (trainerId === 'database-vocab') {
+            loadDatabaseVocabulary(container);
         } else if (trainerId === 'substitution') {
             loadExercise1(container);
         } else if (trainerId === 'translation') {
@@ -1240,6 +1243,167 @@
         setTimeout(() => {
             errorDiv.style.display = 'none';
         }, 5000);
+    }
+
+    async function loadDatabaseVocabulary(container) {
+        try {
+            container.innerHTML = '<p style="text-align: center; color: #666;">⏳ Загрузка словаря...</p>';
+
+            const response = await fetch(`${API_BASE}/vocabulary`);
+            const stats = await response.json();
+
+            let html = `<h2>📚 Словарь из базы данных</h2>
+                <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #667eea;">${stats.verbs}</div>
+                            <div style="font-size: 12px; color: #666;">Глаголов</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #667eea;">${stats.nouns}</div>
+                            <div style="font-size: 12px; color: #666;">Существительных</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #667eea;">${stats.articles}</div>
+                            <div style="font-size: 12px; color: #666;">Артиклей</div>
+                        </div>
+                    </div>
+                </div>`;
+
+            // Search form
+            html += `<div style="margin-bottom: 20px;">
+                <input type="text" id="vocab-search" placeholder="Поиск слова..." style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px;">
+                <div style="margin-top: 10px; display: flex; gap: 10px;">
+                    <button onclick="loadVerbsList()" style="flex: 1; padding: 10px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">📖 Глаголы</button>
+                    <button onclick="loadNounsList()" style="flex: 1; padding: 10px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">📝 Существительные</button>
+                    <button onclick="loadArticlesList()" style="flex: 1; padding: 10px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">✏️ Артикли</button>
+                </div>
+            </div>`;
+
+            html += `<div id="vocab-list" style="margin-top: 20px;"></div>`;
+
+            container.innerHTML = html;
+
+            // Load verbs by default
+            loadVerbsList();
+
+            // Add search listener
+            document.getElementById('vocab-search').addEventListener('keyup', (e) => {
+                const query = e.target.value;
+                if (query.length > 2) {
+                    searchVocabulary(query);
+                }
+            });
+        } catch (error) {
+            console.error('Error loading vocabulary:', error);
+            container.innerHTML = `<p style="color: red;">❌ Ошибка при загрузке словаря: ${error.message}</p>`;
+        }
+    }
+
+    async function loadVerbsList() {
+        try {
+            const response = await fetch(`${API_BASE}/vocabulary/verbs`);
+            const data = await response.json();
+            displayVocabularyList(data.verbs, 'Глаголы');
+        } catch (error) {
+            console.error('Error loading verbs:', error);
+        }
+    }
+
+    async function loadNounsList() {
+        try {
+            const response = await fetch(`${API_BASE}/vocabulary/nouns`);
+            const data = await response.json();
+            displayVocabularyList(data.nouns, 'Существительные');
+        } catch (error) {
+            console.error('Error loading nouns:', error);
+        }
+    }
+
+    async function loadArticlesList() {
+        try {
+            const response = await fetch(`${API_BASE}/vocabulary/articles`);
+            const data = await response.json();
+
+            let html = `<h3>Определённые артикли</h3>`;
+            data.definite.forEach(a => {
+                html += `<div class="card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div>
+                        <div style="font-weight: bold; font-size: 18px; color: #667eea;">${a.article}</div>
+                        <div style="font-size: 12px; color: #999;">${a.gender} / ${a.number} / ${a.article_case}</div>
+                    </div>
+                </div>`;
+            });
+
+            html += `<h3 style="margin-top: 20px;">Неопределённые артикли</h3>`;
+            data.indefinite.forEach(a => {
+                html += `<div class="card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div>
+                        <div style="font-weight: bold; font-size: 18px; color: #667eea;">${a.article}</div>
+                        <div style="font-size: 12px; color: #999;">${a.gender} / ${a.number} / ${a.article_case}</div>
+                    </div>
+                </div>`;
+            });
+
+            document.getElementById('vocab-list').innerHTML = html;
+        } catch (error) {
+            console.error('Error loading articles:', error);
+        }
+    }
+
+    async function searchVocabulary(query) {
+        try {
+            const response = await fetch(`${API_BASE}/vocabulary/search/${query}`);
+            const data = await response.json();
+            displayVocabularyList(data.results, `Результаты поиска: "${query}"`);
+        } catch (error) {
+            console.error('Error searching vocabulary:', error);
+        }
+    }
+
+    function displayVocabularyList(items, title) {
+        let html = `<h3>${title} (${items.length})</h3>`;
+
+        items.forEach(item => {
+            const translation = item.english_translation || 'нет перевода';
+            const extra = item.gender ? `(${item.gender})` : item.conjugation_type ? `(${item.conjugation_type})` : '';
+
+            html += `<div class="card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div style="flex: 1;">
+                    <div style="font-weight: bold; color: #667eea; font-size: 16px;">${item.word}</div>
+                    <div style="color: #999; font-size: 13px;">${translation} ${extra}</div>
+                </div>
+                <button onclick="showWordDetails('${item.word}')" style="background: #667eea; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">Подробнее</button>
+            </div>`;
+        });
+
+        document.getElementById('vocab-list').innerHTML = html;
+    }
+
+    async function showWordDetails(word) {
+        try {
+            const response = await fetch(`${API_BASE}/vocabulary/word/${word}`);
+            const data = await response.json();
+
+            let html = `<h3>${data.lemma.word}</h3>
+                <p style="color: #666; margin-bottom: 15px;">${data.lemma.english_translation}</p>
+                <h4>Формы:</h4>`;
+
+            data.forms.forEach(f => {
+                const morph = typeof f.morphology === 'string' ? JSON.parse(f.morphology) : f.morphology;
+                const morphStr = Object.entries(morph).map(([k, v]) => `${k}: ${v}`).join(', ');
+
+                html += `<div class="card" style="margin-bottom: 8px; padding: 10px;">
+                    <div style="font-weight: bold; color: #667eea;">${f.form}</div>
+                    <div style="font-size: 12px; color: #999;">${morphStr}</div>
+                    ${f.article ? `<div style="font-size: 12px; color: #666;">Артикль: ${f.article}</div>` : ''}
+                </div>`;
+            });
+
+            document.getElementById('vocab-list').innerHTML = html;
+        } catch (error) {
+            console.error('Error loading word details:', error);
+        }
     }
 </script>
 

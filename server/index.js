@@ -13,6 +13,7 @@ import conjugationRouter from './routes/conjugation.js';
 import irregularVerbsRouter from './routes/irregular-verbs.js';
 import firstConjugationRouter from './routes/first-conjugation.js';
 import categoriesRouter from './routes/categories.js';
+import vocabularyRouter from './routes/vocabulary.js';
 import { verifyToken, requireAdmin } from './middleware/auth.js';
 import db from './db/database.js';
 import { extractWordsFromPhrases } from './utils/extract-words.js';
@@ -72,6 +73,7 @@ app.use('/api/conjugation', conjugationRouter);
 app.use('/api/irregular-verbs', irregularVerbsRouter);
 app.use('/api/first-conjugation', firstConjugationRouter);
 app.use('/api/categories', categoriesRouter);
+app.use('/api/vocabulary', vocabularyRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

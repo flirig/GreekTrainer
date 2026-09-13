@@ -1232,8 +1232,126 @@
     }
 
     function openCategory(categoryId, categoryName) {
-        // TODO: Show category words
-        alert('Скоро будет доступно');
+        document.getElementById('home-view').style.display = 'none';
+        document.getElementById('trainer-view').style.display = 'block';
+        const container = document.getElementById('trainer-container');
+
+        loadCategoryWords(container, categoryId, categoryName);
+    }
+
+    async function loadCategoryWords(container, categoryId, categoryName) {
+        try {
+            container.innerHTML = '<p style="text-align: center; color: #666;">⏳ Загрузка...</p>';
+
+            // Map category names to word types
+            const categoryMap = {
+                'Глаголы': 'verb',
+                'Существительные': 'noun',
+                'Местоимения': 'pronoun',
+                'Нареч': 'adverb',
+                'Прилагательные': 'adjective'
+            };
+
+            const wordType = categoryMap[categoryName];
+
+            if (wordType) {
+                // Load from database vocabulary
+                const url = wordType === 'verb' ? `${API_BASE}/vocabulary/verbs` : `${API_BASE}/vocabulary/nouns`;
+                const response = await fetch(url);
+                const data = await response.json();
+                const words = wordType === 'verb' ? data.verbs : data.nouns;
+
+                let html = `<h2>${categoryName}</h2>
+                    <div style="background: #f0f4ff; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; color: #666;">
+                        Всего слов: ${words.length}
+                    </div>`;
+
+                words.forEach(word => {
+                    const translation = word.english_translation || 'нет перевода';
+                    const extra = word.gender ? `(${word.gender})` : word.conjugation_type ? `(${word.conjugation_type})` : '';
+
+                    html += `<div class="card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 12px; background: white; border-radius: 6px; border-left: 4px solid #667eea;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; color: #667eea; font-size: 16px;">${word.word}</div>
+                            <div style="color: #999; font-size: 13px;">${translation} ${extra}</div>
+                        </div>
+                        <button onclick="speakWord('${word.word}')" style="background: #667eea; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 18px; margin-right: 10px;" title="Прослушать">🔊</button>
+                        <button onclick="showWordDetailsModal('${word.word}')" style="background: #667eea; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">📖</button>
+                    </div>`;
+                });
+
+                container.innerHTML = html;
+            } else {
+                // Show coming soon for other categories
+                container.innerHTML = `<h2>${categoryName}</h2><p style="color: #999; text-align: center; padding: 40px;">🚧 Эта категория скоро будет доступна</p>`;
+            }
+        } catch (error) {
+            console.error('Error loading category:', error);
+            container.innerHTML = `<p style="color: red;">❌ Ошибка: ${error.message}</p>`;
+        }
+    }
+
+    function speakWord(word) {
+        // Simple speech synthesis (if available)
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'el-GR'; // Greek
+            speechSynthesis.speak(utterance);
+        }
+    }
+
+    async function showWordDetailsModal(word) {
+        try {
+            const response = await fetch(`${API_BASE}/vocabulary/word/${word}`);
+            const data = await response.json();
+
+            let html = `<h3>${data.lemma.word}</h3>
+                <p style="color: #666; margin: 10px 0; font-size: 14px;">${data.lemma.english_translation}</p>
+                <h4 style="margin-top: 15px; margin-bottom: 10px;">Формы (${data.forms.length}):</h4>`;
+
+            data.forms.forEach(f => {
+                const morph = typeof f.morphology === 'string' ? JSON.parse(f.morphology) : f.morphology;
+                const morphStr = Object.entries(morph)
+                    .map(([k, v]) => `<span style="background: #f0f4ff; padding: 2px 6px; border-radius: 3px; font-size: 11px; margin-right: 5px;">${v}</span>`)
+                    .join('');
+
+                html += `<div style="background: #f9f9f9; padding: 10px; border-radius: 6px; margin-bottom: 8px;">
+                    <div style="font-weight: bold; color: #667eea; margin-bottom: 5px;">${f.form}</div>
+                    <div style="font-size: 12px; color: #666;">${morphStr}</div>
+                    ${f.article ? `<div style="font-size: 12px; color: #999; margin-top: 5px;">Артикль: ${f.article}</div>` : ''}
+                </div>`;
+            });
+
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+                z-index: 10000;
+            `;
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.remove();
+            };
+
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: white; padding: 30px; border-radius: 12px;
+                max-width: 500px; max-height: 80vh; overflow-y: auto;
+                width: 90%;
+            `;
+            content.innerHTML = html + `
+                <button onclick="this.closest('div').parentElement.remove()" style="
+                    width: 100%; margin-top: 20px; padding: 10px;
+                    background: #667eea; color: white; border: none; border-radius: 6px;
+                    cursor: pointer; font-weight: 600;
+                ">Закрыть</button>
+            `;
+
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+        } catch (error) {
+            console.error('Error showing details:', error);
+            alert('Ошибка при загрузке подробностей слова');
+        }
     }
 
     function showError(message) {

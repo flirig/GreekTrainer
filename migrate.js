@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 
-const pg = require('pg');
-const fs = require('fs');
-const path = require('path');
+import pg from 'pg';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const migrationDir = path.join(__dirname, 'migrations');
 
 async function runMigrations() {
@@ -26,7 +30,7 @@ async function runMigrations() {
     console.log('✓ Migrations table ready');
 
     // Get list of migration files
-    const files = fs.readdirSync(migrationDir)
+    const files = (await fs.readdir(migrationDir))
       .filter(f => f.startsWith('00') && (f.endsWith('.sql') || f.endsWith('.js')))
       .sort();
 
@@ -54,18 +58,18 @@ async function runMigrations() {
       try {
         if (file.endsWith('.sql')) {
           // Execute SQL migration
-          const sqlContent = fs.readFileSync(path.join(migrationDir, file), 'utf8');
+          const sqlContent = await fs.readFile(path.join(migrationDir, file), 'utf8');
           await client.query(sqlContent);
         } else if (file.endsWith('.js')) {
           // Execute JavaScript migration
-          const migration = require(path.join(migrationDir, file));
+          const migration = await import(path.join(migrationDir, file));
           if (typeof migration === 'function') {
             await migration(client);
           } else if (migration.up) {
             await migration.up(client);
           } else {
             // Just load data from the module
-            const { articles, verbs, nouns } = migration;
+            const { articles, verbs, nouns } = migration.default || migration;
 
             if (articles) {
               for (const article of articles) {

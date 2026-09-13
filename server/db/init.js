@@ -6,6 +6,10 @@ import { SQLITE_SCHEMA, POSTGRES_SCHEMA, INITIAL_DATA } from './schema.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs/promises';
+import dotenv from 'dotenv';
+
+// Load .env file
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

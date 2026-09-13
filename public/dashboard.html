@@ -1259,7 +1259,21 @@
                 const url = wordType === 'verb' ? `${API_BASE}/vocabulary/verbs` : `${API_BASE}/vocabulary/nouns`;
                 const response = await fetch(url);
                 const data = await response.json();
-                const words = wordType === 'verb' ? data.verbs : data.nouns;
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to load vocabulary');
+                }
+
+                const words = (wordType === 'verb' ? data.verbs : data.nouns) || [];
+
+                if (words.length === 0) {
+                    container.innerHTML = `<h2>${categoryName}</h2>
+                        <div style="background: #fee; padding: 20px; border-radius: 6px; text-align: center; color: #c33;">
+                            <p>⚠️ Словарь пока не загружен</p>
+                            <p style="font-size: 12px; margin-top: 10px;">Выполните миграции: npm run migrate</p>
+                        </div>`;
+                    return;
+                }
 
                 let html = `<h2>${categoryName}</h2>
                     <div style="background: #f0f4ff; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; color: #666;">

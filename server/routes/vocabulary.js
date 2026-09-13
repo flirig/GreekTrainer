@@ -3,22 +3,53 @@ import db from '../db/database.js';
 
 const router = express.Router();
 
+// Check if vocabulary tables exist and have data
+async function checkVocabularyTables() {
+  try {
+    const database = await db.get();
+    const result = await database.get('SELECT COUNT(*) as count FROM lemmas').catch(() => null);
+    return result !== null;
+  } catch (error) {
+    return false;
+  }
+}
+
 // Get all vocabulary (verbs and nouns)
 router.get('/', async (req, res) => {
   try {
     const database = await db.get();
 
-    // Get counts
-    const articlesCount = await database.get('SELECT COUNT(*) as count FROM articles');
-    const verbsCount = await database.get('SELECT COUNT(*) as count FROM lemmas WHERE pos = ?', ['verb']);
-    const nounsCount = await database.get('SELECT COUNT(*) as count FROM lemmas WHERE pos = ?', ['noun']);
+    // Try to get counts, handle missing tables gracefully
+    let articlesCount = 0, verbsCount = 0, nounsCount = 0;
+
+    try {
+      const result = await database.get('SELECT COUNT(*) as count FROM articles');
+      articlesCount = result?.count || 0;
+    } catch (e) {
+      console.warn('Articles table not found');
+    }
+
+    try {
+      const result = await database.get('SELECT COUNT(*) as count FROM lemmas WHERE pos = ?', ['verb']);
+      verbsCount = result?.count || 0;
+    } catch (e) {
+      console.warn('Lemmas table not found');
+    }
+
+    try {
+      const result = await database.get('SELECT COUNT(*) as count FROM lemmas WHERE pos = ?', ['noun']);
+      nounsCount = result?.count || 0;
+    } catch (e) {
+      console.warn('Lemmas table not found');
+    }
 
     res.json({
       status: 'loaded',
-      articles: articlesCount?.count || 0,
-      verbs: verbsCount?.count || 0,
-      nouns: nounsCount?.count || 0,
-      total: (articlesCount?.count || 0) + (verbsCount?.count || 0) + (nounsCount?.count || 0)
+      articles: articlesCount,
+      verbs: verbsCount,
+      nouns: nounsCount,
+      total: articlesCount + verbsCount + nounsCount,
+      message: (verbsCount === 0 && nounsCount === 0) ? 'Please run migrations: npm run migrate' : null
     });
   } catch (error) {
     console.error('Error fetching vocabulary stats:', error);
@@ -30,22 +61,31 @@ router.get('/', async (req, res) => {
 router.get('/verbs', async (req, res) => {
   try {
     const database = await db.get();
-    const limit = req.query.limit || 50;
-    const offset = req.query.offset || 0;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = parseInt(req.query.offset) || 0;
 
-    const verbs = await database.all(
-      `SELECT l.id, l.word, l.english_translation, l.conjugation_type
-       FROM lemmas l
-       WHERE l.pos = ?
-       ORDER BY l.word
-       LIMIT ? OFFSET ?`,
-      ['verb', limit, offset]
-    );
+    let verbs = [];
+    try {
+      verbs = await database.all(
+        `SELECT l.id, l.word, l.english_translation, l.conjugation_type
+         FROM lemmas l
+         WHERE l.pos = ?
+         ORDER BY l.word
+         LIMIT ? OFFSET ?`,
+        ['verb', limit, offset]
+      );
+    } catch (dbError) {
+      console.error('Database error fetching verbs:', dbError.message);
+      return res.status(500).json({
+        error: 'Vocabulary tables not initialized. Please run: npm run migrate',
+        verbs: []
+      });
+    }
 
-    res.json({ verbs, total: verbs.length });
+    res.json({ verbs: verbs || [], total: (verbs || []).length });
   } catch (error) {
     console.error('Error fetching verbs:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message, verbs: [] });
   }
 });
 
@@ -53,22 +93,31 @@ router.get('/verbs', async (req, res) => {
 router.get('/nouns', async (req, res) => {
   try {
     const database = await db.get();
-    const limit = req.query.limit || 50;
-    const offset = req.query.offset || 0;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = parseInt(req.query.offset) || 0;
 
-    const nouns = await database.all(
-      `SELECT l.id, l.word, l.english_translation, l.gender, l.declension_class
-       FROM lemmas l
-       WHERE l.pos = ?
-       ORDER BY l.word
-       LIMIT ? OFFSET ?`,
-      ['noun', limit, offset]
-    );
+    let nouns = [];
+    try {
+      nouns = await database.all(
+        `SELECT l.id, l.word, l.english_translation, l.gender, l.declension_class
+         FROM lemmas l
+         WHERE l.pos = ?
+         ORDER BY l.word
+         LIMIT ? OFFSET ?`,
+        ['noun', limit, offset]
+      );
+    } catch (dbError) {
+      console.error('Database error fetching nouns:', dbError.message);
+      return res.status(500).json({
+        error: 'Vocabulary tables not initialized. Please run: npm run migrate',
+        nouns: []
+      });
+    }
 
-    res.json({ nouns, total: nouns.length });
+    res.json({ nouns: nouns || [], total: (nouns || []).length });
   } catch (error) {
     console.error('Error fetching nouns:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message, nouns: [] });
   }
 });
 

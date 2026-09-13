@@ -16,6 +16,10 @@ const usePostgres = !!process.env.DATABASE_URL;
 const DEFAULT_ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@greektrainer.local';
 const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
+console.log('📋 Environment check:');
+console.log('  DATABASE_URL:', process.env.DATABASE_URL ? '✓ SET' : '✗ NOT SET');
+console.log('  usePostgres:', usePostgres);
+
 const SYSTEM_CATEGORIES = [
   { name: 'Существительные', icon: '📦' },
   { name: 'Глаголы', icon: '⚡' },

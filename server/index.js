@@ -47,6 +47,20 @@ app.get('/dashboard', (req, res) => {
 });
 
 // API Routes
+app.get('/api', (req, res) => {
+  res.json({
+    message: 'Greek Trainer API',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      phrases: '/api/phrases',
+      words: '/api/words',
+      exercises: '/api/exercises'
+    }
+  });
+});
+
 app.use('/api/auth', authRouter);
 app.use('/api/phrases', phrasesRouter);
 app.use('/api/words', wordsRouter);

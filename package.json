@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node server/db/init.js && node server/index.js",
     "dev": "node --watch server/index.js",
-    "db:init": "node server/db/init.js"
+    "db:init": "node server/db/init.js",
+    "migrate": "node migrate.js",
+    "migrate:local": "DATABASE_URL=postgresql://localhost:5432/greek_db node migrate.js"
   },
   "keywords": ["greek", "language", "learning", "trainer"],
   "author": "",

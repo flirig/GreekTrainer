@@ -11,6 +11,8 @@ import rulesRouter from './routes/rules.js';
 import wordExercisesRouter from './routes/word-exercises.js';
 import conjugationRouter from './routes/conjugation.js';
 import irregularVerbsRouter from './routes/irregular-verbs.js';
+import firstConjugationRouter from './routes/first-conjugation.js';
+import categoriesRouter from './routes/categories.js';
 import { verifyToken, requireAdmin } from './middleware/auth.js';
 import db from './db/database.js';
 import { extractWordsFromPhrases } from './utils/extract-words.js';
@@ -29,9 +31,19 @@ app.use(express.json());
 // Serve static files
 app.use(express.static(join(__dirname, '../public')));
 
+// Main page - redirect to dashboard
+app.get('/', (req, res) => {
+  res.sendFile(join(__dirname, '../public/dashboard.html'));
+});
+
 // Admin panel
 app.get('/admin', (req, res) => {
   res.sendFile(join(__dirname, '../public/admin.html'));
+});
+
+// Dashboard
+app.get('/dashboard', (req, res) => {
+  res.sendFile(join(__dirname, '../public/dashboard.html'));
 });
 
 // API Routes
@@ -44,6 +56,8 @@ app.use('/api/exercises', exercisesRouter);
 app.use('/api/word-exercises', wordExercisesRouter);
 app.use('/api/conjugation', conjugationRouter);
 app.use('/api/irregular-verbs', irregularVerbsRouter);
+app.use('/api/first-conjugation', firstConjugationRouter);
+app.use('/api/categories', categoriesRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

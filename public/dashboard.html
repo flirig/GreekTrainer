@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Греческий тренажер</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .title {
+            font-size: 36px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            font-size: 40px;
+        }
+
+        .user-panel {
+            background: rgba(255,255,255,0.95);
+            padding: 12px 20px;
+            border-radius: 8px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-icon {
+            font-size: 32px;
+        }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            min-height: 140px;
+            justify-content: center;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .card-icon {
+            font-size: 48px;
+            line-height: 1;
+        }
+
+        .card-text {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Full Width Card */
+        .card-full {
+            grid-column: 1 / -1;
+        }
+
+        /* Auth Overlay */
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .auth-overlay.show {
+            display: flex;
+        }
+
+        .auth-modal {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            background: #f0f0f0;
+            border: none;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .auth-tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+            font-size: 13px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .form-group button:hover {
+            background: #5568d3;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .auth-modal {
+            position: relative;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            padding: 40px;
+        }
+
+        .error {
+            background: #fecaca;
+            color: #dc2626;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .section-title {
+                font-size: 22px;
+            }
+
+            .title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <div class="title">
+            <span class="logo">🇬🇷</span>
+            Тренажеры
+        </div>
+        <div class="user-panel" id="user-panel">
+            <button class="btn btn-primary" onclick="showAuth()">Вход / Регистрация</button>
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    <div id="error-message" class="error" style="display: none;"></div>
+
+    <!-- Auth Modal -->
+    <div class="auth-overlay" id="auth-overlay">
+        <div class="auth-modal">
+            <button class="modal-close" onclick="closeAuth()">✕</button>
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')">Вход</button>
+                <button class="auth-tab" onclick="switchAuthTab('register')">Регистрация</button>
+            </div>
+
+            <form class="auth-form active" id="login-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit">Войти</button>
+                </div>
+            </form>
+
+            <form class="auth-form" id="register-form" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label>Пароль (минимум 6 символов)</label>
+                    <input type="password" id="register-password" minlength="6" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit">Зарегистрироваться</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content (shown after login) -->
+    <div id="main-content" style="display: none;">
+        <!-- TRAINERS SECTION -->
+        <div id="home-view">
+            <div class="section">
+                <div class="section-title">
+                    <span class="section-icon">🎯</span> Тренажеры
+                </div>
+                <div class="grid" id="trainers-grid">
+                    <div class="loading">Загрузка...</div>
+                </div>
+            </div>
+
+            <!-- VOCABULARY SECTION -->
+            <div class="section">
+            <div class="section-title">
+                <span class="section-icon">📚</span> Словари
+            </div>
+
+            <!-- All Words -->
+            <div class="grid">
+                <div class="card card-full" onclick="openTrainer('vocabulary')">
+                    <div class="card-icon">📖</div>
+                    <div class="card-text">Все слова</div>
+                </div>
+            </div>
+
+            <!-- Categories -->
+            <div style="margin-top: 30px;">
+                <div style="font-size: 20px; font-weight: bold; color: white; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 24px;">🏷️</span> По категориям
+                </div>
+                <div class="grid" id="categories-grid">
+                    <div class="loading">Загрузка категорий...</div>
+                </div>
+            </div>
+
+            <!-- User's Custom Categories -->
+            <div id="custom-categories-section" style="display: none; margin-top: 30px;">
+                <div style="font-size: 20px; font-weight: bold; color: white; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 24px;">✨</span> Мои категории
+                </div>
+                <div class="grid" id="user-categories-grid"></div>
+                <button class="btn btn-primary" id="add-category-btn" onclick="showCreateCategoryForm()" style="margin-top: 20px;">+ Новая категория</button>
+                <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; margin-top: 15px; display: none;" id="custom-category-form">
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label style="color: white;">Название категории</label>
+                        <input type="text" id="category-name" placeholder="Например: Еда">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="color: white;">Иконка (эмодзи)</label>
+                        <input type="text" id="category-icon" placeholder="Например: 🍽️" value="📚">
+                    </div>
+                    <button class="btn btn-primary" onclick="createCategory()" style="margin-right: 10px;">Создать</button>
+                    <button class="btn" style="background: rgba(255,255,255,0.2); color: white;" onclick="hideCreateCategoryForm()">Отмена</button>
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- TRAINER VIEW -->
+        <div id="trainer-view" style="display: none;">
+            <button class="btn btn-primary" onclick="backToHome()" style="margin-bottom: 20px;">← Назад на главную</button>
+            <div id="trainer-container" style="background: white; padding: 30px; border-radius: 12px;">
+                <div class="loading">Загрузка тренажера...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://localhost:3000/api';
+    let token = localStorage.getItem('token');
+    let currentUser = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (token) {
+            loadUserData();
+        }
+    });
+
+    function showAuth() {
+        document.getElementById('auth-overlay').classList.add('show');
+    }
+
+    function closeAuth() {
+        document.getElementById('auth-overlay').classList.remove('show');
+    }
+
+    function switchAuthTab(tab) {
+        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById(tab + '-form').classList.add('active');
+    }
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        try {
+            const response = await fetch(API_BASE + '/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+            if (data.token) {
+                token = data.token;
+                localStorage.setItem('token', token);
+                closeAuth();
+                loadUserData();
+            } else {
+                showError(data.error || 'Ошибка входа');
+            }
+        } catch (error) {
+            showError('Ошибка подключения: ' + error.message);
+        }
+    }
+
+    async function handleRegister(e) {
+        e.preventDefault();
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+
+        try {
+            const response = await fetch(API_BASE + '/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+            if (data.token) {
+                token = data.token;
+                localStorage.setItem('token', token);
+                closeAuth();
+                loadUserData();
+            } else {
+                showError(data.error || 'Ошибка регистрации');
+            }
+        } catch (error) {
+            showError('Ошибка подключения: ' + error.message);
+        }
+    }
+
+    async function loadUserData() {
+        try {
+            const response = await fetch(API_BASE + '/auth/me', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.ok) {
+                currentUser = await response.json();
+                updateUserPanel();
+                loadContent();
+                document.getElementById('main-content').style.display = 'block';
+            } else {
+                logout();
+            }
+        } catch (error) {
+            showError('Ошибка загрузки: ' + error.message);
+        }
+    }
+
+    function updateUserPanel() {
+        const panel = document.getElementById('user-panel');
+        panel.innerHTML = `
+            <div style="font-size: 14px; color: #555;">👤 ${currentUser.email}</div>
+            ${currentUser.is_admin ? '<a href="/admin" target="_blank" class="btn btn-primary">Admin</a>' : ''}
+            <button class="btn btn-danger" onclick="logout()">Выход</button>
+        `;
+    }
+
+    function logout() {
+        token = null;
+        localStorage.removeItem('token');
+        currentUser = null;
+        document.getElementById('main-content').style.display = 'none';
+        document.getElementById('user-panel').innerHTML = '<button class="btn btn-primary" onclick="showAuth()">Вход / Регистрация</button>';
+    }
+
+    function loadContent() {
+        loadPhrases();
+        loadTrainers();
+        loadCategories();
+    }
+
+    function loadTrainers() {
+        const trainers = [
+            { name: 'Словарь', icon: '📚', id: 'vocabulary' },
+            { name: 'Подстановка', icon: '✏️', id: 'substitution' },
+            { name: 'Перевод', icon: '🌐', id: 'translation' },
+            { name: 'Аудио', icon: '🔊', id: 'audio' },
+            { name: 'Ударения', icon: '📍', id: 'accents' },
+            { name: 'Ошибки', icon: '❌', id: 'mistakes' },
+            { name: 'Карточки', icon: '🎴', id: 'flashcards' },
+            { name: 'Письмо', icon: '✍️', id: 'writing' },
+            { name: 'МИКС', icon: '🔥', id: 'mix' },
+            { name: 'Спряжение', icon: '⚡', id: 'conjugation' },
+            { name: 'Неправильные глаголы', icon: '🎯', id: 'irregular' },
+            { name: '1-е спряжение', icon: '🔗', id: 'first-conj' }
+        ];
+
+        const grid = document.getElementById('trainers-grid');
+        grid.innerHTML = trainers.map(t => `
+            <div class="card" onclick="openTrainer('${t.id}')">
+                <div class="card-icon">${t.icon}</div>
+                <div class="card-text">${t.name}</div>
+            </div>
+        `).join('');
+    }
+
+    async function loadCategories() {
+        try {
+            const response = await fetch(API_BASE + '/categories/system');
+            const categories = await response.json();
+
+            const grid = document.getElementById('categories-grid');
+            grid.innerHTML = categories.map(c => `
+                <div class="card" onclick="openCategory(${c.id}, '${c.name}')">
+                    <div class="card-icon">${c.icon}</div>
+                    <div class="card-text">${c.name}</div>
+                </div>
+            `).join('');
+
+            loadUserCategories();
+        } catch (error) {
+            showError('Ошибка загрузки категорий: ' + error.message);
+        }
+    }
+
+    async function loadUserCategories() {
+        try {
+            const response = await fetch(API_BASE + '/categories/user', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const categories = await response.json();
+
+            if (categories.length > 0) {
+                document.getElementById('custom-categories-section').style.display = 'block';
+                const grid = document.getElementById('user-categories-grid');
+                grid.innerHTML = categories.map(c => `
+                    <div class="card" onclick="openCategory(${c.id}, '${c.name}')">
+                        <div class="card-icon">${c.icon}</div>
+                        <div class="card-text">${c.name}</div>
+                    </div>
+                `).join('');
+            }
+        } catch (error) {
+            console.error('Error loading user categories:', error);
+        }
+    }
+
+    function showCreateCategoryForm() {
+        document.getElementById('custom-category-form').style.display = 'block';
+    }
+
+    function hideCreateCategoryForm() {
+        document.getElementById('custom-category-form').style.display = 'none';
+        document.getElementById('category-name').value = '';
+        document.getElementById('category-icon').value = '📚';
+    }
+
+    async function createCategory() {
+        const name = document.getElementById('category-name').value;
+        const icon = document.getElementById('category-icon').value || '📚';
+
+        if (!name) {
+            showError('Укажите название категории');
+            return;
+        }
+
+        try {
+            const response = await fetch(API_BASE + '/categories/user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ name, icon })
+            });
+
+            if (response.ok) {
+                hideCreateCategoryForm();
+                loadUserCategories();
+            } else {
+                const data = await response.json();
+                showError(data.error);
+            }
+        } catch (error) {
+            showError('Ошибка создания категории: ' + error.message);
+        }
+    }
+
+    let phrases = [];
+
+    async function loadPhrases() {
+        try {
+            const response = await fetch(`${API_BASE}/phrases`);
+            phrases = await response.json();
+        } catch (error) {
+            console.error('Error loading phrases:', error);
+        }
+    }
+
+    function speak(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'el-GR';
+            u.rate = 0.9;
+            window.speechSynthesis.speak(u);
+        }
+    }
+
+    function shuffle(array) {
+        let cur = array.length, rnd;
+        while (cur != 0) {
+            rnd = Math.floor(Math.random() * cur);
+            cur--;
+            [array[cur], array[rnd]] = [array[rnd], array[cur]];
+        }
+        return array;
+    }
+
+    function backToHome() {
+        document.getElementById('home-view').style.display = 'block';
+        document.getElementById('trainer-view').style.display = 'none';
+    }
+
+    async function openTrainer(trainerId) {
+        if (!phrases.length) await loadPhrases();
+
+        document.getElementById('home-view').style.display = 'none';
+        document.getElementById('trainer-view').style.display = 'block';
+
+        const container = document.getElementById('trainer-container');
+
+        if (trainerId === 'vocabulary') {
+            showVocabulary(container);
+        } else if (trainerId === 'substitution') {
+            loadExercise1(container);
+        } else if (trainerId === 'translation') {
+            loadExercise2(container);
+        } else if (trainerId === 'audio') {
+            loadExercise4(container);
+        } else if (trainerId === 'accents') {
+            loadExercise6(container);
+        } else if (trainerId === 'mistakes') {
+            loadExercise7(container);
+        } else if (trainerId === 'mix') {
+            loadMixMode(container);
+        } else if (trainerId === 'conjugation') {
+            loadConjugation(container);
+        } else if (trainerId === 'irregular') {
+            loadIrregularVerbs(container);
+        } else if (trainerId === 'first-conj') {
+            loadFirstConjugation(container);
+        } else {
+            container.innerHTML = '<p>Этот тренажер скоро будет готов</p>';
+        }
+    }
+
+    function showVocabulary(container) {
+        let html = '<h2>📚 Все слова</h2><div class="card" style="margin-top: 20px; display: flex; margin-bottom: 10px;">';
+
+        phrases.forEach(p => {
+            html += `<div class="card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div>
+                    <div style="font-weight: bold; color: #667eea; font-size: 16px;">${p.el}</div>
+                    <div style="color: #999; font-size: 13px;">${p.ru}</div>
+                </div>
+                <button onclick="speak('${p.el}')" style="background: #667eea; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 18px;">🔊</button>
+            </div>`;
+        });
+
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function loadExercise1(container) {
+        if (phrases.length === 0) return;
+        const p = phrases[Math.floor(Math.random() * phrases.length)];
+        const words = p.el.split(' ');
+        const valid = words.map((w, i) => w.length > 2 ? i : -1).filter(i => i !== -1);
+        const hIdx = valid.length > 0 ? valid[Math.floor(Math.random() * valid.length)] : Math.floor(Math.random() * words.length);
+        const hWord = words[hIdx];
+        const dWords = [...words];
+        dWords[hIdx] = "______";
+
+        let all = [];
+        phrases.forEach(ph => ph.el.split(' ').forEach(w => {
+            if(w.length>2 && !all.includes(w)) all.push(w);
+        }));
+        all = all.filter(w => w !== hWord);
+        shuffle(all);
+        let opts = [hWord, ...all.slice(0, 3)];
+        shuffle(opts);
+
+        let html = `<h2>✏️ Подстановка</h2>
+            <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">${dWords.join(' ')}</div>
+                <div style="color: #999;">(${p.ru})</div>
+            </div>
+            <div id="options-container" style="display: flex; flex-direction: column; gap: 10px;"></div>`;
+
+        container.innerHTML = html;
+
+        const optsContainer = container.querySelector('#options-container');
+        opts.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.style.cssText = 'padding: 12px; background: #f0f0f0; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: 600;';
+            btn.textContent = opt;
+            btn.onclick = () => {
+                optsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
+                if (opt === hWord) {
+                    btn.style.background = '#2ecc71';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#27ae60';
+                    speak(p.el);
+                } else {
+                    btn.style.background = '#ef4444';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#dc2626';
+                }
+            };
+            optsContainer.appendChild(btn);
+        });
+    }
+
+    function loadExercise2(container) {
+        if (phrases.length === 0) return;
+        const p = phrases[Math.floor(Math.random() * phrases.length)];
+
+        let wrong = [];
+        phrases.forEach(ph => { if(ph.ru !== p.ru) wrong.push(ph.ru); });
+        shuffle(wrong);
+        let opts = [p.ru, ...wrong.slice(0, 3)];
+        shuffle(opts);
+
+        let html = `<h2>🌐 Перевод</h2>
+            <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <div style="font-size: 18px; font-weight: bold;">${p.el}</div>
+            </div>
+            <div id="options-container" style="display: flex; flex-direction: column; gap: 10px;"></div>`;
+
+        container.innerHTML = html;
+
+        const optsContainer = container.querySelector('#options-container');
+        opts.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.style.cssText = 'padding: 12px; background: #f0f0f0; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: 600;';
+            btn.textContent = opt;
+            btn.onclick = () => {
+                optsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
+                if (opt === p.ru) {
+                    btn.style.background = '#2ecc71';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#27ae60';
+                } else {
+                    btn.style.background = '#ef4444';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#dc2626';
+                }
+            };
+            optsContainer.appendChild(btn);
+        });
+    }
+
+    function loadExercise4(container) {
+        if (phrases.length === 0) return;
+        const p = phrases[Math.floor(Math.random() * phrases.length)];
+
+        let wrong = [];
+        phrases.forEach(ph => { if(ph.ru !== p.ru) wrong.push(ph.ru); });
+        shuffle(wrong);
+        let opts = [p.ru, ...wrong.slice(0, 3)];
+        shuffle(opts);
+
+        let html = `<h2>🔊 На слух</h2>
+            <button onclick="speak('${p.el}')" style="width: 100px; height: 100px; font-size: 40px; border: none; cursor: pointer; border-radius: 50%; background: #667eea; margin-bottom: 30px;">🔊</button>
+            <div id="options-container" style="display: flex; flex-direction: column; gap: 10px;"></div>`;
+
+        container.innerHTML = html;
+
+        const optsContainer = container.querySelector('#options-container');
+        opts.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.style.cssText = 'padding: 12px; background: #f0f0f0; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: 600;';
+            btn.textContent = opt;
+            btn.onclick = () => {
+                optsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
+                if (opt === p.ru) {
+                    btn.style.background = '#2ecc71';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#27ae60';
+                } else {
+                    btn.style.background = '#ef4444';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#dc2626';
+                }
+            };
+            optsContainer.appendChild(btn);
+        });
+    }
+
+    function loadExercise6(container) {
+        if (phrases.length === 0) return;
+        const p = phrases[Math.floor(Math.random() * phrases.length)];
+
+        let opts = [p.el];
+        if (p.accent_variants) {
+            opts.push(...p.accent_variants.slice(0, 3));
+        }
+        shuffle(opts);
+
+        let html = `<h2>📍 Ударения</h2>
+            <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <div style="color: #999;">Перевод:</div>
+                <div style="font-size: 16px; font-weight: bold;">${p.ru}</div>
+            </div>
+            <div id="options-container" style="display: flex; flex-direction: column; gap: 10px;"></div>`;
+
+        container.innerHTML = html;
+
+        const optsContainer = container.querySelector('#options-container');
+        opts.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.style.cssText = 'padding: 12px; background: #f0f0f0; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: 600;';
+            btn.textContent = opt;
+            btn.onclick = () => {
+                optsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
+                if (opt === p.el) {
+                    btn.style.background = '#2ecc71';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#27ae60';
+                } else {
+                    btn.style.background = '#ef4444';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#dc2626';
+                }
+            };
+            optsContainer.appendChild(btn);
+        });
+    }
+
+    function loadExercise7(container) {
+        if (phrases.length === 0) return;
+        const p = phrases[Math.floor(Math.random() * phrases.length)];
+
+        let opts = [p.el];
+        if (p.mistakes) {
+            opts.push(...p.mistakes.slice(0, 3));
+        }
+        shuffle(opts);
+
+        let html = `<h2>❌ Ошибки</h2>
+            <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <div style="color: #999;">Где НЕТ ошибки?</div>
+                <div style="font-size: 14px; font-weight: bold;">${p.ru}</div>
+            </div>
+            <div id="options-container" style="display: flex; flex-direction: column; gap: 10px;"></div>`;
+
+        container.innerHTML = html;
+
+        const optsContainer = container.querySelector('#options-container');
+        opts.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.style.cssText = 'padding: 12px; background: #f0f0f0; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: 600;';
+            btn.textContent = opt;
+            btn.onclick = () => {
+                optsContainer.querySelectorAll('button').forEach(b => b.disabled = true);
+                if (opt === p.el) {
+                    btn.style.background = '#2ecc71';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#27ae60';
+                } else {
+                    btn.style.background = '#ef4444';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#dc2626';
+                }
+            };
+            optsContainer.appendChild(btn);
+        });
+    }
+
+    let mixStreak = 0;
+    let mixAchievements = [];
+    const achievementsMap = {
+        3: { icon: "🔥", desc: "Стрик 3: Разогрев!" },
+        5: { icon: "🥉", desc: "Стрик 5: Отличник!" },
+        10: { icon: "🥈", desc: "Стрик 10: Полиглот!" },
+        15: { icon: "🥇", desc: "Стрик 15: Мастер!" },
+        20: { icon: "👑", desc: "Стрик 20: Легенда!" }
+    };
+
+    function loadMixMode(container) {
+        let html = `<h2>🔥 МИКС режим</h2>
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="font-size: 24px; font-weight: bold; color: #667eea;">Стрик: <span id="mix-streak" style="color: #e67e22;">0</span></div>
+                <div id="mix-achievements" style="font-size: 24px; margin-top: 10px;"></div>
+            </div>
+            <div id="mix-exercise"></div>`;
+
+        container.innerHTML = html;
+        mixStreak = 0;
+        mixAchievements = [];
+        nextMixExercise(container);
+    }
+
+    function nextMixExercise(container) {
+        const types = [1, 2, 4, 6, 7]; // ex types
+        const type = types[Math.floor(Math.random() * types.length)];
+
+        const exerciseDiv = container.querySelector('#mix-exercise');
+        exerciseDiv.innerHTML = '<div class="loading">Загрузка упражнения...</div>';
+
+        setTimeout(() => {
+            if (type === 1) createExercise(exerciseDiv, 1, 'mix');
+            else if (type === 2) createExercise(exerciseDiv, 2, 'mix');
+            else if (type === 4) createExercise(exerciseDiv, 4, 'mix');
+            else if (type === 6) createExercise(exerciseDiv, 6, 'mix');
+            else if (type === 7) createExercise(exerciseDiv, 7, 'mix');
+        }, 300);
+    }
+
+    function createExercise(container, type, mode = null) {
+        if (phrases.length === 0) return;
+        const p = phrases[Math.floor(Math.random() * phrases.length)];
+
+        let html = '';
+        let options = [];
+        let correctAnswer = null;
+
+        if (type === 1) {
+            const words = p.el.split(' ');
+            const valid = words.map((w, i) => w.length > 2 ? i : -1).filter(i => i !== -1);
+            const hIdx = valid.length > 0 ? valid[Math.floor(Math.random() * valid.length)] : 0;
+            const hWord = words[hIdx];
+            const dWords = [...words];
+            dWords[hIdx] = "______";
+
+            html = `<div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <div style="font-size: 16px; font-weight: bold;">${dWords.join(' ')}</div>
+                <div style="color: #999; font-size: 13px;">(${p.ru})</div>
+            </div>`;
+
+            let all = [];
+            phrases.forEach(ph => ph.el.split(' ').forEach(w => {
+                if(w.length>2 && !all.includes(w)) all.push(w);
+            }));
+            all = all.filter(w => w !== hWord);
+            shuffle(all);
+            options = [hWord, ...all.slice(0, 3)];
+            shuffle(options);
+            correctAnswer = hWord;
+        } else if (type === 2 || type === 4) {
+            let wrong = [];
+            phrases.forEach(ph => { if(ph.ru !== p.ru) wrong.push(ph.ru); });
+            shuffle(wrong);
+
+            if (type === 2) {
+                html = `<div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="font-size: 16px; font-weight: bold;">${p.el}</div>
+                </div>`;
+            } else {
+                html = `<button onclick="speak('${p.el}')" style="width: 80px; height: 80px; font-size: 32px; border: none; cursor: pointer; border-radius: 50%; background: #667eea; margin-bottom: 20px;">🔊</button>`;
+            }
+
+            options = [p.ru, ...wrong.slice(0, 3)];
+            shuffle(options);
+            correctAnswer = p.ru;
+        } else if (type === 6) {
+            html = `<div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <div style="color: #999; font-size: 13px;">Перевод:</div>
+                <div style="font-size: 16px; font-weight: bold;">${p.ru}</div>
+            </div>`;
+
+            options = [p.el];
+            correctAnswer = p.el;
+        } else if (type === 7) {
+            html = `<div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <div style="color: #999; font-size: 13px;">Где НЕТ ошибки?</div>
+                <div style="font-size: 16px; font-weight: bold;">${p.ru}</div>
+            </div>`;
+
+            options = [p.el];
+            correctAnswer = p.el;
+        }
+
+        html += '<div id="opts" style="display: flex; flex-direction: column; gap: 10px;"></div>';
+        container.innerHTML = html;
+
+        const optsDiv = container.querySelector('#opts');
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.style.cssText = 'padding: 12px; background: #f0f0f0; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: 600;';
+            btn.textContent = opt;
+            btn.onclick = () => {
+                optsDiv.querySelectorAll('button').forEach(b => b.disabled = true);
+                const isCorrect = opt === correctAnswer;
+
+                if (isCorrect) {
+                    btn.style.background = '#2ecc71';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#27ae60';
+
+                    if (mode === 'mix') {
+                        mixStreak++;
+                        if (achievementsMap[mixStreak]) {
+                            mixAchievements.push(achievementsMap[mixStreak]);
+                        }
+                        updateMixUI();
+                    }
+                } else {
+                    btn.style.background = '#ef4444';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#dc2626';
+
+                    if (mode === 'mix') {
+                        mixStreak = 0;
+                        mixAchievements = [];
+                        updateMixUI();
+                    }
+                }
+
+                const nextBtn = document.createElement('button');
+                nextBtn.className = 'btn btn-primary';
+                nextBtn.textContent = 'Дальше ➡️';
+                nextBtn.style.marginTop = '20px';
+                nextBtn.onclick = () => {
+                    const mainContainer = document.getElementById('trainer-container');
+                    if (mode === 'mix') {
+                        nextMixExercise(mainContainer);
+                    }
+                };
+                optsDiv.appendChild(nextBtn);
+            };
+            optsDiv.appendChild(btn);
+        });
+    }
+
+    function updateMixUI() {
+        const container = document.getElementById('trainer-container');
+        const streakEl = container.querySelector('#mix-streak');
+        const achievementsEl = container.querySelector('#mix-achievements');
+
+        if (streakEl) streakEl.textContent = mixStreak;
+        if (achievementsEl) {
+            achievementsEl.innerHTML = mixAchievements.map(a => `<span title="${a.desc}">${a.icon}</span>`).join('');
+        }
+    }
+
+    async function loadConjugation(container) {
+        let html = `<h2>📖 Спряжение глагола είμαι (быть)</h2>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                <thead style="background: #f0f0f0;">
+                    <tr>
+                        <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Лицо</th>
+                        <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Форма</th>
+                        <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Перевод</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;">1 лицо ед.ч.</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; color: #667eea;">είμαι</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">я есть</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;">2 лицо ед.ч.</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; color: #667eea;">είσαι</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">ты есть</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;">3 лицо ед.ч.</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; color: #667eea;">είναι</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">он/она/оно есть</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;">1 лицо мн.ч.</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; color: #667eea;">είμαστε</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">мы есть</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;">2 лицо мн.ч.</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; color: #667eea;">είστε</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">вы есть</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;">3 лицо мн.ч.</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; color: #667eea;">είναι</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">они есть</td>
+                    </tr>
+                </tbody>
+            </table>`;
+
+        container.innerHTML = html;
+    }
+
+    async function loadIrregularVerbs(container) {
+        let html = `<h2>🔤 Неправильные глаголы</h2>
+            <p style="color: #999; margin-bottom: 20px;">Изучайте формы неправильных греческих глаголов:</p>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead style="background: #f0f0f0;">
+                    <tr>
+                        <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Инфинитив</th>
+                        <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Перевод</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; color: #667eea;">έχω</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">иметь</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; color: #667eea;">πάω</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">идти</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; color: #667eea;">λέω</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">говорить</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; color: #667eea;">δίνω</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">давать</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; color: #667eea;">κάνω</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">делать</td>
+                    </tr>
+                </tbody>
+            </table>`;
+
+        container.innerHTML = html;
+    }
+
+    async function loadFirstConjugation(container) {
+        let html = `<h2>✏️ 1-е спряжение (-ω)</h2>
+            <p style="color: #999; margin-bottom: 20px;">Регулярные глаголы 1-го спряжения:</p>
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <h4 style="margin-bottom: 10px;">Пример: λύω (развязывать)</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="background: white;">
+                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">λύω</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; color: #999;">я развязываю</td>
+                    </tr>
+                    <tr style="background: white;">
+                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">λύεις</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; color: #999;">ты развязываешь</td>
+                    </tr>
+                    <tr style="background: white;">
+                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">λύει</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; color: #999;">он развязывает</td>
+                    </tr>
+                    <tr style="background: white;">
+                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">λύουμε</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; color: #999;">мы развязываем</td>
+                    </tr>
+                    <tr style="background: white;">
+                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">λύετε</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; color: #999;">вы развязываете</td>
+                    </tr>
+                    <tr style="background: white;">
+                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">λύουν(ε)</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; color: #999;">они развязывают</td>
+                    </tr>
+                </table>
+            </div>`;
+
+        container.innerHTML = html;
+    }
+
+    function openCategory(categoryId, categoryName) {
+        // TODO: Show category words
+        alert('Скоро будет доступно');
+    }
+
+    function showError(message) {
+        const errorDiv = document.getElementById('error-message');
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 5000);
+    }
+</script>
+
+</body>
+</html>

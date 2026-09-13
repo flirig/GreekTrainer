@@ -16,6 +16,15 @@ const usePostgres = !!process.env.DATABASE_URL;
 const DEFAULT_ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@greektrainer.local';
 const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
+const SYSTEM_CATEGORIES = [
+  { name: 'Существительные', icon: '📦' },
+  { name: 'Глаголы', icon: '⚡' },
+  { name: 'Местоимения', icon: '👤' },
+  { name: 'Прилагательные', icon: '🎨' },
+  { name: 'Наречия', icon: '⏩' },
+  { name: 'Предлоги', icon: '🔗' }
+];
+
 async function ensureAdminUser(queryFn) {
   try {
     console.log('🔐 Checking for admin user...');
@@ -59,6 +68,15 @@ async function initPostgres() {
       await client.query(statement);
     }
     console.log('✅ Schema created');
+
+    console.log('📚 Creating system categories...');
+    for (const cat of SYSTEM_CATEGORIES) {
+      await client.query(
+        'INSERT INTO word_categories (name, icon, is_system) VALUES ($1, $2, $3) ON CONFLICT (name) DO NOTHING',
+        [cat.name, cat.icon, true]
+      );
+    }
+    console.log('✅ System categories created');
 
     console.log('🔄 Loading initial data...');
     for (const phrase of INITIAL_DATA) {
@@ -152,6 +170,22 @@ async function initSqlite() {
           });
         }
         console.log('✅ Schema created');
+
+        // Create system categories
+        console.log('📚 Creating system categories...');
+        for (const cat of SYSTEM_CATEGORIES) {
+          await new Promise((res, rej) => {
+            sqlite.run(
+              'INSERT OR IGNORE INTO word_categories (name, icon, is_system) VALUES (?, ?, ?)',
+              [cat.name, cat.icon, 1],
+              (err) => {
+                if (err) rej(err);
+                else res();
+              }
+            );
+          });
+        }
+        console.log('✅ System categories created');
 
         // Insert initial data
         console.log('🔄 Loading initial data...');

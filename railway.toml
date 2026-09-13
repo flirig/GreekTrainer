@@ -2,6 +2,7 @@
 buildCommand = "npm install"
 
 [deploy]
+preDeployCommand = "npm run migrate"
 startCommand = "npm start"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 5

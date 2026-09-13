@@ -241,4 +241,4 @@ const nouns = [
   { word: 'τηλέφωνο', english: 'telephone', gender: 'neuter', declension: 3 },
 ];
 
-module.exports = { articles, verbs, nouns };
+export default { articles, verbs, nouns };

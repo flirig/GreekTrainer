@@ -6,3 +6,6 @@ preDeployCommand = "npm run migrate"
 startCommand = "npm start"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 5
+
+[env]
+DATABASE_URL = "postgresql://postgres:UocqgyuXFBzdEdnfhTlGGReuNZnYRZyo@postgres.railway.internal:5432/railway"

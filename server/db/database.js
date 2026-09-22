@@ -1,8 +1,11 @@
+import dotenv from 'dotenv';
 import sqlite3 from 'sqlite3';
 import pg from 'pg';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs/promises';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

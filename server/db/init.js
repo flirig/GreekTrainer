@@ -115,12 +115,19 @@ async function initPostgres() {
     }
 
     // Create default admin user
+    const convertSqlToPostgres = (sql, params) => {
+      let paramIndex = 1;
+      const convertedSql = sql.replace(/\?/g, () => `$${paramIndex++}`);
+      return { sql: convertedSql, params };
+    };
+
     await ensureAdminUser(async (sql, params, isGet) => {
+      const { sql: convertedSql, params: convertedParams } = convertSqlToPostgres(sql, params);
       if (isGet) {
-        const result = await client.query(sql, params);
+        const result = await client.query(convertedSql, convertedParams);
         return result.rows[0] || null;
       } else {
-        return await client.query(sql, params);
+        return await client.query(convertedSql, convertedParams);
       }
     });
 

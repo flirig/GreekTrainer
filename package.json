@@ -5,11 +5,9 @@
   "type": "module",
   "main": "server/index.js",
   "scripts": {
-    "start": "npm run db:init && npm run migrate:paradigms && npm run import:data && node server/index.js",
+    "start": "node server/index.js",
     "dev": "NODE_ENV=development node --watch server/index.js",
     "db:init": "NODE_ENV=development node server/db/init.js",
-    "migrate:paradigms": "node migrate-paradigms.js",
-    "import:data": "node scripts/import-lexicon.js",
     "migrate": "node migrate.js",
     "migrate:local": "DATABASE_URL=postgresql://localhost:5432/greek_db node migrate.js"
   },

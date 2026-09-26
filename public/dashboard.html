@@ -1597,50 +1597,123 @@
         try {
             const nounsRes = await fetch(API_BASE + '/grammar/nouns');
             const nouns = await nounsRes.json();
+            const declensionsRes = await fetch(API_BASE + '/grammar/declensions');
+            const declensions = await declensionsRes.json();
 
             let html = `<h3 style="color: #667eea; margin-bottom: 15px;">📄 Определённые артикли (ο, η, το)</h3>
-                <div style="margin-bottom: 20px; padding: 15px; background: #f0f7ff; border-radius: 8px;">
-                    <p style="margin: 0 0 10px 0;"><strong>🎯 Проверка знаний</strong></p>
-                    <div id="article-quiz" style="margin-top: 15px;"></div>
+                <!-- ТРЕНАЖЕР 1: Именительный падеж -->
+                <div style="margin-bottom: 30px; padding: 15px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid #667eea;">
+                    <p style="margin: 0 0 10px 0;"><strong>🎯 Тренажер 1: Именительный падеж (Ονομαστική)</strong></p>
+                    <div id="article-quiz-1" style="margin-top: 15px;"></div>
                 </div>
-                <div style="background: #f9f9f9; padding: 20px; border-radius: 8px;">
-                    <button onclick="toggleCollapse('article-rules')" style="width: 100%; padding: 12px; background: #f0f7ff; border: none; cursor: pointer; border-radius: 6px; font-weight: 600; color: #667eea; display: flex; justify-content: space-between;">
-                        <span>▼ Таблица артиклей</span>
-                        <span id="article-rules-icon">▼</span>
+
+                <!-- ТАБЛИЦА 1: Именительный падеж -->
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #ddd;">
+                    <h4 style="color: #667eea; margin-top: 0; margin-bottom: 15px;">📖 Ενικός & Πληθυντικός (Ονομαστική)</h4>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <thead>
+                            <tr style="background: #f0f0f0; border-bottom: 2px solid #667eea;">
+                                <th style="padding: 10px; text-align: left; font-weight: bold; color: #667eea;">Число</th>
+                                <th style="padding: 10px; text-align: left; font-weight: bold; color: #667eea;">м.р.</th>
+                                <th style="padding: 10px; text-align: left; font-weight: bold; color: #667eea;">ж.р.</th>
+                                <th style="padding: 10px; text-align: left; font-weight: bold; color: #667eea;">с.р.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: white; border-bottom: 1px solid #eee;">
+                                <td style="padding: 10px; font-weight: bold;">Ενικός</td>
+                                <td style="padding: 10px; color: #667eea;">ο πατέρας</td>
+                                <td style="padding: 10px; color: #667eea;">η μητέρα</td>
+                                <td style="padding: 10px; color: #667eea;">το παιδί</td>
+                            </tr>
+                            <tr style="background: #f9f9f9; border-bottom: 1px solid #eee;">
+                                <td style="padding: 10px; font-weight: bold;">Πληθυντικός</td>
+                                <td style="padding: 10px; color: #667eea;">οι πατέρες</td>
+                                <td style="padding: 10px; color: #667eea;">οι μητέρες</td>
+                                <td style="padding: 10px; color: #667eea;">τα παιδιά</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ТРЕНАЖЕР 2: Другие падежи -->
+                <div style="margin-bottom: 30px; padding: 15px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid #667eea;">
+                    <p style="margin: 0 0 10px 0;"><strong>🎯 Тренажер 2: Генитив & Аккузатив (Γενική & Αιτιατική)</strong></p>
+                    <div id="article-quiz-2" style="margin-top: 15px;"></div>
+                </div>
+
+                <!-- ТАБЛИЦА 2: Полная склонение -->
+                <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+                    <button onclick="toggleCollapse('declension-table')" style="width: 100%; padding: 12px; background: #f0f7ff; border: none; cursor: pointer; border-radius: 6px; font-weight: 600; color: #667eea; display: flex; justify-content: space-between; margin-bottom: 15px;">
+                        <span>▼ Полная таблица склонения</span>
+                        <span id="declension-table-icon">▼</span>
                     </button>
-                    <div id="article-rules" style="padding: 20px; display: block;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr style="background: #f0f0f0; border-bottom: 2px solid #667eea;">
-                                    <th style="padding: 12px; text-align: left; font-weight: bold; color: #667eea;">Род</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: bold; color: #667eea;">Артикль</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: bold; color: #667eea;">Пример</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: bold; color: #667eea;">Перевод</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr style="background: white; border-bottom: 1px solid #eee;">
-                                    <td style="padding: 12px; font-weight: bold;">Αρσενικό (м.р.)</td>
-                                    <td style="padding: 12px; color: #667eea; font-weight: 600; font-size: 16px;">ο</td>
-                                    <td style="padding: 12px; color: #667eea; font-weight: 600;">ο πατέρας</td>
-                                    <td style="padding: 12px; color: #555;">отец</td>
-                                </tr>
-                                <tr style="background: #f9f9f9; border-bottom: 1px solid #eee;">
-                                    <td style="padding: 12px; font-weight: bold;">Θηλυκό (ж.р.)</td>
-                                    <td style="padding: 12px; color: #667eea; font-weight: 600; font-size: 16px;">η</td>
-                                    <td style="padding: 12px; color: #667eea; font-weight: 600;">η μητέρα</td>
-                                    <td style="padding: 12px; color: #555;">мать</td>
-                                </tr>
-                                <tr style="background: white; border-bottom: 1px solid #eee;">
-                                    <td style="padding: 12px; font-weight: bold;">Ουδέτερο (с.р.)</td>
-                                    <td style="padding: 12px; color: #667eea; font-weight: 600; font-size: 16px;">το</td>
-                                    <td style="padding: 12px; color: #667eea; font-weight: 600;">το παιδί</td>
-                                    <td style="padding: 12px; color: #555;">ребёнок</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div style="margin-top: 15px; padding: 12px; background: #f0f7ff; border-radius: 6px; font-size: 13px; color: #555;">
-                            <p style="margin: 0;"><strong>💡 Примечание:</strong> Артикль согласуется с существительным по роду.</p>
+                    <div id="declension-table" style="padding: 15px; display: block;">
+                        <div style="margin-bottom: 15px;">
+                            <h5 style="margin: 0 0 10px 0; color: #667eea;">Ενικός (Единственное число)</h5>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                <thead>
+                                    <tr style="background: #f0f0f0; border-bottom: 1px solid #ddd;">
+                                        <th style="padding: 8px; text-align: left;">Падеж</th>
+                                        <th style="padding: 8px;">м.р.</th>
+                                        <th style="padding: 8px;">ж.р.</th>
+                                        <th style="padding: 8px;">с.р.</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="background: white; border-bottom: 1px solid #eee;">
+                                        <td style="padding: 8px; font-weight: bold;">Ονομαστική (И.п.)</td>
+                                        <td style="padding: 8px; color: #667eea;">ο</td>
+                                        <td style="padding: 8px; color: #667eea;">η</td>
+                                        <td style="padding: 8px; color: #667eea;">το</td>
+                                    </tr>
+                                    <tr style="background: #f9f9f9; border-bottom: 1px solid #eee;">
+                                        <td style="padding: 8px; font-weight: bold;">Γενική (Р.п.)</td>
+                                        <td style="padding: 8px; color: #667eea;">του</td>
+                                        <td style="padding: 8px; color: #667eea;">της</td>
+                                        <td style="padding: 8px; color: #667eea;">του</td>
+                                    </tr>
+                                    <tr style="background: white; border-bottom: 1px solid #eee;">
+                                        <td style="padding: 8px; font-weight: bold;">Αιτιατική (В.п.)</td>
+                                        <td style="padding: 8px; color: #667eea;">τον</td>
+                                        <td style="padding: 8px; color: #667eea;">την</td>
+                                        <td style="padding: 8px; color: #667eea;">το</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div>
+                            <h5 style="margin: 0 0 10px 0; color: #667eea;">Πληθυντικός (Множественное число)</h5>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                <thead>
+                                    <tr style="background: #f0f0f0; border-bottom: 1px solid #ddd;">
+                                        <th style="padding: 8px; text-align: left;">Падеж</th>
+                                        <th style="padding: 8px;">м.р.</th>
+                                        <th style="padding: 8px;">ж.р.</th>
+                                        <th style="padding: 8px;">с.р.</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="background: white; border-bottom: 1px solid #eee;">
+                                        <td style="padding: 8px; font-weight: bold;">Ονομαστική (И.п.)</td>
+                                        <td style="padding: 8px; color: #667eea;">οι</td>
+                                        <td style="padding: 8px; color: #667eea;">οι</td>
+                                        <td style="padding: 8px; color: #667eea;">τα</td>
+                                    </tr>
+                                    <tr style="background: #f9f9f9; border-bottom: 1px solid #eee;">
+                                        <td style="padding: 8px; font-weight: bold;">Γενική (Р.п.)</td>
+                                        <td style="padding: 8px; color: #667eea;">των</td>
+                                        <td style="padding: 8px; color: #667eea;">των</td>
+                                        <td style="padding: 8px; color: #667eea;">των</td>
+                                    </tr>
+                                    <tr style="background: white;">
+                                        <td style="padding: 8px; font-weight: bold;">Αιτιατική (В.п.)</td>
+                                        <td style="padding: 8px; color: #667eea;">τους</td>
+                                        <td style="padding: 8px; color: #667eea;">τις</td>
+                                        <td style="padding: 8px; color: #667eea;">τα</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>`;
@@ -1648,9 +1721,16 @@
             container.innerHTML = html;
             container.style.display = 'block';
 
-            const quizDiv = container.querySelector('#article-quiz');
+            // Load both quizzes
+            const quiz1Div = container.querySelector('#article-quiz-1');
+            const quiz2Div = container.querySelector('#article-quiz-2');
+
             if (window.QuizModules && window.QuizModules.chooseArticle && nouns && nouns.length > 0) {
-                loadArticleQuiz(quizDiv, nouns);
+                loadArticleQuiz(quiz1Div, nouns);
+            }
+
+            if (window.QuizModules && window.QuizModules.chooseArticleWithCase && declensions && declensions.length > 0) {
+                loadArticleQuizWithCase(quiz2Div, declensions);
             }
 
         } catch (error) {
@@ -1674,6 +1754,33 @@
         const result = module.render(question, (isCorrect, answer) => {
             if (isCorrect) {
                 setTimeout(() => loadArticleQuiz(container, nouns), 2000);
+            }
+        });
+
+        container.innerHTML = '';
+        if (result instanceof Element) {
+            container.appendChild(result);
+        }
+    }
+
+    async function loadArticleQuizWithCase(container, declensions) {
+        if (!declensions || declensions.length === 0) return;
+
+        const module = window.QuizModules.chooseArticleWithCase;
+        const decl = declensions[Math.floor(Math.random() * declensions.length)];
+
+        const question = {
+            number: decl.number,
+            case_name: decl.case_name,
+            gender: decl.gender,
+            article_el: decl.article_el,
+            example_el: decl.example_el,
+            example_ru: decl.example_ru
+        };
+
+        const result = module.render(question, (isCorrect, answer) => {
+            if (isCorrect) {
+                setTimeout(() => loadArticleQuizWithCase(container, declensions), 2000);
             }
         });
 

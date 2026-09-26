@@ -143,6 +143,17 @@ CREATE TABLE IF NOT EXISTS noun_articles (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(noun_el, gender)
 );
+CREATE TABLE IF NOT EXISTS article_declensions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  number TEXT NOT NULL,
+  case_name TEXT NOT NULL,
+  gender TEXT NOT NULL,
+  article_el TEXT NOT NULL,
+  example_el TEXT,
+  example_ru TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(number, case_name, gender)
+);
 CREATE INDEX IF NOT EXISTS idx_user_progress_user_id ON user_progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_accent_variants_phrase_id ON accent_variants(phrase_id);
 CREATE INDEX IF NOT EXISTS idx_mistakes_phrase_id ON mistakes(phrase_id);
@@ -294,6 +305,17 @@ CREATE TABLE IF NOT EXISTS noun_articles (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(noun_el, gender)
 );
+CREATE TABLE IF NOT EXISTS article_declensions (
+  id SERIAL PRIMARY KEY,
+  number TEXT NOT NULL,
+  case_name TEXT NOT NULL,
+  gender TEXT NOT NULL,
+  article_el TEXT NOT NULL,
+  example_el TEXT,
+  example_ru TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(number, case_name, gender)
+);
 CREATE INDEX IF NOT EXISTS idx_user_progress_user_id ON user_progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_accent_variants_phrase_id ON accent_variants(phrase_id);
 CREATE INDEX IF NOT EXISTS idx_mistakes_phrase_id ON mistakes(phrase_id);
@@ -367,6 +389,33 @@ export const NOUN_ARTICLES_DATA = [
   { noun_el: 'σπίτι', noun_ru: 'дом', gender: 'Ουδέτερο', article_el: 'το', example_el: 'το σπίτι', example_ru: 'дом' },
   { noun_el: 'δέντρο', noun_ru: 'дерево', gender: 'Ουδέτερο', article_el: 'το', example_el: 'το δέντρο', example_ru: 'дерево' },
   { noun_el: 'βιβλίο', noun_ru: 'книга', gender: 'Ουδέτερο', article_el: 'το', example_el: 'το βιβλίο', example_ru: 'книга' }
+];
+
+export const ARTICLE_DECLENSIONS_DATA = [
+  // Ενικός (Singular) - Ονομαστική (Nominative)
+  { number: 'Ενικός', case_name: 'Ονομαστική', gender: 'Αρσενικό', article_el: 'ο', example_el: 'ο πατέρας', example_ru: 'отец (им.п.)' },
+  { number: 'Ενικός', case_name: 'Ονομαστική', gender: 'Θηλυκό', article_el: 'η', example_el: 'η μητέρα', example_ru: 'мать (им.п.)' },
+  { number: 'Ενικός', case_name: 'Ονομαστική', gender: 'Ουδέτερο', article_el: 'το', example_el: 'το παιδί', example_ru: 'ребёнок (им.п.)' },
+  // Ενικός (Singular) - Γενική (Genitive)
+  { number: 'Ενικός', case_name: 'Γενική', gender: 'Αρσενικό', article_el: 'του', example_el: 'του πατέρα', example_ru: 'отца (род.п.)' },
+  { number: 'Ενικός', case_name: 'Γενική', gender: 'Θηλυκό', article_el: 'της', example_el: 'της μητέρας', example_ru: 'матери (род.п.)' },
+  { number: 'Ενικός', case_name: 'Γενική', gender: 'Ουδέτερο', article_el: 'του', example_el: 'του παιδιού', example_ru: 'ребёнка (род.п.)' },
+  // Ενικός (Singular) - Αιτιατική (Accusative)
+  { number: 'Ενικός', case_name: 'Αιτιατική', gender: 'Αρσενικό', article_el: 'τον', example_el: 'τον πατέρα', example_ru: 'отца (вин.п.)' },
+  { number: 'Ενικός', case_name: 'Αιτιατική', gender: 'Θηλυκό', article_el: 'την', example_el: 'την μητέρα', example_ru: 'мать (вин.п.)' },
+  { number: 'Ενικός', case_name: 'Αιτιατική', gender: 'Ουδέτερο', article_el: 'το', example_el: 'το παιδί', example_ru: 'ребёнка (вин.п.)' },
+  // Πληθυντικός (Plural) - Ονομαστική (Nominative)
+  { number: 'Πληθυντικός', case_name: 'Ονομαστική', gender: 'Αρσενικό', article_el: 'οι', example_el: 'οι πατέρες', example_ru: 'отцы (им.п.)' },
+  { number: 'Πληθυντικός', case_name: 'Ονομαστική', gender: 'Θηλυκό', article_el: 'οι', example_el: 'οι μητέρες', example_ru: 'матери (им.п.)' },
+  { number: 'Πληθυντικός', case_name: 'Ονομαστική', gender: 'Ουδέτερο', article_el: 'τα', example_el: 'τα παιδιά', example_ru: 'дети (им.п.)' },
+  // Πληθυντικός (Plural) - Γενική (Genitive)
+  { number: 'Πληθυντικός', case_name: 'Γενική', gender: 'Αρσενικό', article_el: 'των', example_el: 'των πατέρων', example_ru: 'отцов (род.п.)' },
+  { number: 'Πληθυντικός', case_name: 'Γενική', gender: 'Θηλυκό', article_el: 'των', example_el: 'των μητέρων', example_ru: 'матерей (род.п.)' },
+  { number: 'Πληθυντικός', case_name: 'Γενική', gender: 'Ουδέτερο', article_el: 'των', example_el: 'των παιδιών', example_ru: 'детей (род.п.)' },
+  // Πληθυντικός (Plural) - Αιτιατική (Accusative)
+  { number: 'Πληθυντικός', case_name: 'Αιτιατική', gender: 'Αρσενικό', article_el: 'τους', example_el: 'τους πατέρες', example_ru: 'отцов (вин.п.)' },
+  { number: 'Πληθυντικός', case_name: 'Αιτιατική', gender: 'Θηλυκό', article_el: 'τις', example_el: 'τις μητέρες', example_ru: 'матерей (вин.п.)' },
+  { number: 'Πληθυντικός', case_name: 'Αιτιατική', gender: 'Ουδέτερο', article_el: 'τα', example_el: 'τα παιδιά', example_ru: 'детей (вин.п.)' }
 ];
 
 export const CONJUGATION_DATA = [

@@ -249,6 +249,41 @@ window.QuizModules = {
       container.appendChild(optionsDiv);
       return container;
     }
+  },
+
+  chooseArticleWithCase: {
+    name: 'Выбрать артикль (со склонением)',
+    icon: '📋',
+    id: 'choose-article-case',
+    render(question, onAnswer) {
+      const getUniqueArticles = (articles) => [...new Set(articles)].sort();
+      const allArticles = ['ο', 'η', 'το', 'του', 'της', 'την', 'τον', 'τις', 'τους', 'οι', 'τα', 'των'];
+      const container = document.createElement('div');
+      const header = document.createElement('div');
+      header.style.cssText = 'background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 15px;';
+      header.innerHTML = `<p style="color: #999; margin: 0 0 10px 0;">Выберите правильный артикль (${question.case_name}):</p><p style="font-size: 18px; font-weight: bold; margin: 0; color: #667eea;">___ ${question.example_el.split(' ').slice(1).join(' ')}</p><p style="color: #999; font-size: 13px; margin: 8px 0 0 0;">${question.number} | ${question.example_ru}</p>`;
+      container.appendChild(header);
+      const optionsDiv = document.createElement('div');
+      optionsDiv.style.cssText = 'display: flex; flex-wrap: wrap; gap: 8px;';
+      const options = [question.article_el, ...allArticles.filter(a => a !== question.article_el).slice(0, 5)];
+      shuffle(options);
+      options.forEach(article => {
+        const btn = document.createElement('button');
+        btn.style.cssText = 'flex: 0 1 calc(50% - 4px); padding: 12px; background: #f0f0f0; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px;';
+        btn.textContent = article;
+        btn.onclick = () => {
+          optionsDiv.querySelectorAll('button').forEach(b => b.style.pointerEvents = 'none');
+          const isCorrect = article === question.article_el;
+          btn.style.background = isCorrect ? '#2ecc71' : '#ef4444';
+          btn.style.color = 'white';
+          btn.style.borderColor = isCorrect ? '#27ae60' : '#dc2626';
+          if (onAnswer) onAnswer(isCorrect, article);
+        };
+        optionsDiv.appendChild(btn);
+      });
+      container.appendChild(optionsDiv);
+      return container;
+    }
   }
 };
 

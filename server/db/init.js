@@ -2,7 +2,7 @@ import sqlite3 from 'sqlite3';
 import pg from 'pg';
 const { Client } = pg;
 import bcrypt from 'bcrypt';
-import { SQLITE_SCHEMA, POSTGRES_SCHEMA, INITIAL_DATA, CONJUGATION_DATA, GRAMMAR_TOPICS, NOUN_ARTICLES_DATA } from './schema.js';
+import { SQLITE_SCHEMA, POSTGRES_SCHEMA, INITIAL_DATA, CONJUGATION_DATA, GRAMMAR_TOPICS, NOUN_ARTICLES_DATA, ARTICLE_DECLENSIONS_DATA } from './schema.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs/promises';
@@ -148,6 +148,16 @@ async function initPostgres() {
       );
     }
     console.log('✅ Noun articles loaded');
+
+    console.log('📋 Loading article declensions...');
+    await client.query('DELETE FROM article_declensions');
+    for (const decl of ARTICLE_DECLENSIONS_DATA) {
+      await client.query(
+        'INSERT INTO article_declensions (number, case_name, gender, article_el, example_el, example_ru) VALUES ($1, $2, $3, $4, $5, $6)',
+        [decl.number, decl.case_name, decl.gender, decl.article_el, decl.example_el, decl.example_ru]
+      );
+    }
+    console.log('✅ Article declensions loaded');
 
     // Create default admin user
     const convertSqlToPostgres = (sql, params) => {
@@ -350,6 +360,28 @@ async function initSqlite() {
           });
         }
         console.log('✅ Noun articles loaded');
+
+        // Load article declensions
+        console.log('📋 Loading article declensions...');
+        await new Promise((res, rej) => {
+          sqlite.run('DELETE FROM article_declensions', (err) => {
+            if (err) rej(err);
+            else res();
+          });
+        });
+        for (const decl of ARTICLE_DECLENSIONS_DATA) {
+          await new Promise((res, rej) => {
+            sqlite.run(
+              'INSERT INTO article_declensions (number, case_name, gender, article_el, example_el, example_ru) VALUES (?, ?, ?, ?, ?, ?)',
+              [decl.number, decl.case_name, decl.gender, decl.article_el, decl.example_el, decl.example_ru],
+              (err) => {
+                if (err) rej(err);
+                else res();
+              }
+            );
+          });
+        }
+        console.log('✅ Article declensions loaded');
 
         // Create default admin user
         await ensureAdminUser(async (sql, params, isGet) => {

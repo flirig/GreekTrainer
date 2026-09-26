@@ -82,4 +82,45 @@ router.get('/nouns', async (req, res) => {
   }
 });
 
+// GET article declensions
+router.get('/declensions', async (req, res) => {
+  try {
+    const database = await db.get();
+    const declensions = await database.all(`
+      SELECT id, number, case_name, gender, article_el, example_el, example_ru
+      FROM article_declensions
+      ORDER BY
+        CASE WHEN number = 'Ενικός' THEN 1 ELSE 2 END,
+        CASE WHEN case_name = 'Ονομαστική' THEN 1 WHEN case_name = 'Γενική' THEN 2 ELSE 3 END,
+        CASE WHEN gender = 'Αρσενικό' THEN 1 WHEN gender = 'Θηλυκό' THEN 2 ELSE 3 END
+    `);
+    res.json(declensions);
+  } catch (error) {
+    console.error('❌ Error fetching declensions:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET random declension for quiz
+router.get('/quiz/declension', async (req, res) => {
+  try {
+    const database = await db.get();
+    const decl = await database.get(`
+      SELECT id, number, case_name, gender, article_el, example_el, example_ru
+      FROM article_declensions
+      WHERE case_name IN ('Γενική', 'Αιτιατική')
+      ORDER BY RANDOM() LIMIT 1
+    `);
+
+    if (!decl) {
+      return res.status(404).json({ error: 'No declensions found' });
+    }
+
+    res.json(decl);
+  } catch (error) {
+    console.error('❌ Error fetching declension:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

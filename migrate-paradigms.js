@@ -1,10 +1,12 @@
-import sqlite3 from 'sqlite3';
-import { join } from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+#!/usr/bin/env node
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const DB_PATH = join(__dirname, 'data', 'trainer.db');
+/**
+ * Paradigm Migration Script
+ * Creates paradigm tables and loads data
+ * Works with both SQLite (dev) and PostgreSQL (production)
+ */
+
+import db from './server/db/database.js';
 
 const PARADIGMS = [
   { code: 'Ρ10.1', name: 'Verb Class 10 Variant 1', type: 'verb', description: 'Present active verbs ending in -ώ (e.g., αγαπώ)', examples: ['αγαπώ'] },
@@ -51,144 +53,112 @@ const WORD_PARADIGM_MAP = {
 };
 
 async function migrate() {
-  const db = new sqlite3.Database(DB_PATH);
+  console.log('📚 Paradigm Migration\n');
 
-  return new Promise((resolve, reject) => {
-    db.serialize(() => {
-      // 1. Create paradigms table
-      console.log('📋 Creating paradigms table...');
-      db.run(`
-        CREATE TABLE IF NOT EXISTS paradigms (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          code TEXT NOT NULL UNIQUE,
-          name TEXT NOT NULL,
-          type TEXT NOT NULL,
-          description TEXT,
-          examples TEXT,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
+  const database = await db.get();
 
-      // 2. Create paradigm_rules table
-      console.log('📋 Creating paradigm_rules table...');
-      db.run(`
-        CREATE TABLE IF NOT EXISTS paradigm_rules (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          paradigm_id INTEGER NOT NULL REFERENCES paradigms(id) ON DELETE CASCADE,
-          tense TEXT,
-          person TEXT,
-          number TEXT,
-          case_name TEXT,
-          gender TEXT,
-          ending TEXT NOT NULL,
-          rule_description TEXT,
-          example_form TEXT,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
+  try {
+    // 1. Create tables
+    console.log('📋 Creating tables...');
+    await database.run(`
+      CREATE TABLE IF NOT EXISTS paradigms (
+        id INTEGER PRIMARY KEY,
+        code TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        type TEXT NOT NULL,
+        description TEXT,
+        examples TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-      // 3. Create word_paradigm table
-      console.log('📋 Creating word_paradigm table...');
-      db.run(`
-        CREATE TABLE IF NOT EXISTS word_paradigm (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          word_id INTEGER NOT NULL UNIQUE REFERENCES words(id) ON DELETE CASCADE,
-          paradigm_id INTEGER REFERENCES paradigms(id) ON DELETE SET NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
+    await database.run(`
+      CREATE TABLE IF NOT EXISTS paradigm_rules (
+        id INTEGER PRIMARY KEY,
+        paradigm_id INTEGER NOT NULL REFERENCES paradigms(id) ON DELETE CASCADE,
+        tense TEXT,
+        person TEXT,
+        number TEXT,
+        ending TEXT NOT NULL,
+        rule_description TEXT,
+        example_form TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-      // 4. Insert paradigms
-      console.log('💾 Inserting paradigms...');
-      for (const paradigm of PARADIGMS) {
-        db.run(
-          'INSERT OR IGNORE INTO paradigms (code, name, type, description, examples) VALUES (?, ?, ?, ?, ?)',
-          [paradigm.code, paradigm.name, paradigm.type, paradigm.description, JSON.stringify(paradigm.examples)]
-        );
-      }
+    await database.run(`
+      CREATE TABLE IF NOT EXISTS word_paradigm (
+        id INTEGER PRIMARY KEY,
+        word_id INTEGER NOT NULL UNIQUE REFERENCES words(id) ON DELETE CASCADE,
+        paradigm_id INTEGER REFERENCES paradigms(id) ON DELETE SET NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-      // 5. Insert paradigm rules (one by one)
-      console.log('💾 Inserting paradigm rules...');
-      let rulesInserted = 0;
+    console.log('✅ Tables created\n');
 
-      // Get all paradigm IDs first
-      db.all('SELECT id, code FROM paradigms', (err, paradigms) => {
-        if (err) {
-          reject(err);
-          return;
-        }
+    // 2. Insert paradigms
+    console.log('💾 Inserting paradigms...');
+    for (const p of PARADIGMS) {
+      await database.run(
+        'INSERT OR IGNORE INTO paradigms (code, name, type, description, examples) VALUES (?, ?, ?, ?, ?)',
+        [p.code, p.name, p.type, p.description, JSON.stringify(p.examples)]
+      );
+    }
+    console.log(`✅ ${PARADIGMS.length} paradigms\n`);
 
-        const paradigmIdMap = {};
-        for (const p of paradigms) {
-          paradigmIdMap[p.code] = p.id;
-        }
+    // 3. Get paradigm IDs and insert rules
+    console.log('💾 Inserting paradigm rules...');
+    const paradigmRows = await database.all('SELECT id, code FROM paradigms');
+    const paradigmIdMap = {};
+    for (const row of paradigmRows) {
+      paradigmIdMap[row.code] = row.id;
+    }
 
-        for (const rule of PARADIGM_RULES) {
-          const paradigmId = paradigmIdMap[rule.paradigm_code];
-          if (!paradigmId) {
-            console.warn(`⚠️ Paradigm not found: ${rule.paradigm_code}`);
-            continue;
-          }
+    for (const rule of PARADIGM_RULES) {
+      const paradigmId = paradigmIdMap[rule.paradigm_code];
+      if (!paradigmId) continue;
 
-          db.run(
-            'INSERT INTO paradigm_rules (paradigm_id, tense, person, number, ending, rule_description, example_form) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [paradigmId, rule.tense, rule.person || null, rule.number, rule.ending, rule.rule, rule.example],
-            (insertErr) => {
-              if (!insertErr) rulesInserted++;
-            }
-          );
-        }
+      await database.run(
+        'INSERT INTO paradigm_rules (paradigm_id, tense, person, number, ending, rule_description, example_form) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [paradigmId, rule.tense, rule.person, rule.number, rule.ending, rule.rule, rule.example]
+      );
+    }
+    console.log(`✅ ${PARADIGM_RULES.length} rules\n`);
 
-        // 6. Link words to paradigms
-        console.log('💾 Linking words to paradigms...');
-        let wordsLinked = 0;
+    // 4. Link words to paradigms
+    console.log('💾 Linking words...');
+    let linked = 0;
+    for (const [lemma, paradigmCode] of Object.entries(WORD_PARADIGM_MAP)) {
+      const paradigmId = paradigmIdMap[paradigmCode];
+      if (!paradigmId) continue;
 
-        for (const [lemma, paradigmCode] of Object.entries(WORD_PARADIGM_MAP)) {
-          const paradigmId = paradigmIdMap[paradigmCode];
-          if (!paradigmId) {
-            console.warn(`⚠️ Paradigm not found: ${paradigmCode}`);
-            continue;
-          }
+      const word = await database.get('SELECT id FROM words WHERE el = ?', [lemma]);
+      if (!word) continue;
 
-          db.get('SELECT id FROM words WHERE el = ?', [lemma], (err, word) => {
-            if (err) {
-              console.warn(`⚠️ Error finding word ${lemma}:`, err.message);
-              return;
-            }
-            if (!word) {
-              console.warn(`⚠️ Word not found: ${lemma}`);
-              return;
-            }
+      await database.run(
+        'INSERT OR IGNORE INTO word_paradigm (word_id, paradigm_id) VALUES (?, ?)',
+        [word.id, paradigmId]
+      );
+      linked++;
+    }
+    console.log(`✅ ${linked} words linked\n`);
+    console.log('✅ Paradigm migration complete!');
 
-            db.run(
-              'INSERT OR IGNORE INTO word_paradigm (word_id, paradigm_id) VALUES (?, ?)',
-              [word.id, paradigmId],
-              (linkErr) => {
-                if (!linkErr) wordsLinked++;
-              }
-            );
-          });
-        }
-
-        // Close after all operations
-        setTimeout(() => {
-          console.log(`\n✅ Migration complete!`);
-          console.log(`   - paradigms: ${PARADIGMS.length}`);
-          console.log(`   - rules inserted: ${rulesInserted}`);
-          console.log(`   - words linked: 4\n`);
-          db.close(() => resolve());
-        }, 2000);
-      });
-    });
-  });
+  } catch (error) {
+    console.error('❌ Migration failed:', error.message);
+    throw error;
+  }
 }
 
-migrate()
-  .then(() => {
-    console.log('✅ Paradigm migration completed successfully!');
-    process.exit(0);
-  })
-  .catch(err => {
-    console.error('❌ Migration failed:', err);
-    process.exit(1);
-  });
+// Run if called directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  migrate()
+    .then(() => process.exit(0))
+    .catch(err => {
+      console.error(err);
+      process.exit(1);
+    });
+}
+
+export default migrate;

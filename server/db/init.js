@@ -116,9 +116,11 @@ async function initPostgres() {
     console.log('✅ Initial phrases loaded');
 
     console.log('🔤 Loading verb conjugations...');
+    // Clear old data first
+    await client.query('DELETE FROM verb_conjugations');
     for (const conjugation of CONJUGATION_DATA) {
       await client.query(
-        'INSERT INTO verb_conjugations (infinitive_el, infinitive_ru, person, form_el, form_ru, tense) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (infinitive_el, person, tense) DO NOTHING',
+        'INSERT INTO verb_conjugations (infinitive_el, infinitive_ru, person, form_el, form_ru, tense) VALUES ($1, $2, $3, $4, $5, $6)',
         [conjugation.infinitive_el, conjugation.infinitive_ru, conjugation.person, conjugation.form_el, conjugation.form_ru, conjugation.tense]
       );
     }
@@ -262,10 +264,17 @@ async function initSqlite() {
 
         // Load verb conjugations
         console.log('🔤 Loading verb conjugations...');
+        // Clear old data first
+        await new Promise((res, rej) => {
+          sqlite.run('DELETE FROM verb_conjugations', (err) => {
+            if (err) rej(err);
+            else res();
+          });
+        });
         for (const conjugation of CONJUGATION_DATA) {
           await new Promise((res, rej) => {
             sqlite.run(
-              'INSERT OR IGNORE INTO verb_conjugations (infinitive_el, infinitive_ru, person, form_el, form_ru, tense) VALUES (?, ?, ?, ?, ?, ?)',
+              'INSERT INTO verb_conjugations (infinitive_el, infinitive_ru, person, form_el, form_ru, tense) VALUES (?, ?, ?, ?, ?, ?)',
               [conjugation.infinitive_el, conjugation.infinitive_ru, conjugation.person, conjugation.form_el, conjugation.form_ru, conjugation.tense],
               (err) => {
                 if (err) rej(err);

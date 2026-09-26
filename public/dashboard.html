@@ -1630,8 +1630,8 @@
         const selectorDiv = container.querySelector('#module-selector');
         const quizContainer = container.querySelector('#quiz-container');
 
-        // Store selected modules
-        let selectedModules = modules.map(m => m.id);
+        // Store selected modules globally
+        window.grammarSelectedModules = modules.map(m => m.id);
 
         // Create header
         const header = document.createElement('div');
@@ -1644,7 +1644,7 @@
 
         modules.forEach(module => {
             const label = document.createElement('label');
-            label.style.cssText = 'display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: #f9f9f9; border-radius: 6px; cursor: pointer; user-select: none; border: 2px solid #ddd; transition: all 0.3s;';
+            label.style.cssText = 'display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: #e8f5ff; border-radius: 6px; cursor: pointer; user-select: none; border: 2px solid #667eea; transition: all 0.3s;';
 
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
@@ -1653,18 +1653,21 @@
 
             checkbox.onchange = () => {
                 if (checkbox.checked) {
-                    if (!selectedModules.includes(module.id)) {
-                        selectedModules.push(module.id);
+                    if (!window.grammarSelectedModules.includes(module.id)) {
+                        window.grammarSelectedModules.push(module.id);
                     }
                     label.style.background = '#e8f5ff';
                     label.style.borderColor = '#667eea';
                 } else {
-                    selectedModules = selectedModules.filter(id => id !== module.id);
+                    window.grammarSelectedModules = window.grammarSelectedModules.filter(id => id !== module.id);
                     label.style.background = '#f9f9f9';
                     label.style.borderColor = '#ddd';
                 }
                 // Reload with selected modules
-                loadMixMode(conjugations, quizContainer, modules.filter(m => selectedModules.includes(m.id)));
+                const selectedModulesList = modules.filter(m => window.grammarSelectedModules.includes(m.id));
+                if (selectedModulesList.length > 0) {
+                    loadMixMode(conjugations, quizContainer, selectedModulesList);
+                }
             };
 
             const text = document.createElement('span');
@@ -1754,7 +1757,14 @@
 
             const result = module.render(question, (isCorrect, answer) => {
                 if (isCorrect) {
-                    setTimeout(() => loadQuizModule(module, conjugations, container), 2000);
+                    // In mix mode, load random module from selected list
+                    setTimeout(() => {
+                        if (window.grammarSelectedModules && window.grammarSelectedModules.length > 0) {
+                            const allModules = Object.values(window.QuizModules).filter(m => m.render);
+                            const selectedModulesList = allModules.filter(m => window.grammarSelectedModules.includes(m.id));
+                            loadMixMode(conjugations, container, selectedModulesList);
+                        }
+                    }, 2000);
                 }
             });
 

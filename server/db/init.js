@@ -118,7 +118,7 @@ async function initPostgres() {
     console.log('🔤 Loading verb conjugations...');
     for (const conjugation of CONJUGATION_DATA) {
       await client.query(
-        'INSERT INTO verb_conjugations (infinitive_el, infinitive_ru, person, form_el, form_ru, tense) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING',
+        'INSERT INTO verb_conjugations (infinitive_el, infinitive_ru, person, form_el, form_ru, tense) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (infinitive_el, person, tense) DO NOTHING',
         [conjugation.infinitive_el, conjugation.infinitive_ru, conjugation.person, conjugation.form_el, conjugation.form_ru, conjugation.tense]
       );
     }

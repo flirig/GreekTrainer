@@ -121,7 +121,8 @@ CREATE TABLE IF NOT EXISTS verb_conjugations (
   form_el TEXT NOT NULL,
   form_ru TEXT NOT NULL,
   tense TEXT DEFAULT 'present',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(infinitive_el, person, tense)
 );
 CREATE INDEX IF NOT EXISTS idx_user_progress_user_id ON user_progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_accent_variants_phrase_id ON accent_variants(phrase_id);
@@ -252,7 +253,8 @@ CREATE TABLE IF NOT EXISTS verb_conjugations (
   form_el TEXT NOT NULL,
   form_ru TEXT NOT NULL,
   tense TEXT DEFAULT 'present',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(infinitive_el, person, tense)
 );
 CREATE INDEX IF NOT EXISTS idx_user_progress_user_id ON user_progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_accent_variants_phrase_id ON accent_variants(phrase_id);

@@ -2,7 +2,7 @@ import sqlite3 from 'sqlite3';
 import pg from 'pg';
 const { Client } = pg;
 import bcrypt from 'bcrypt';
-import { SQLITE_SCHEMA, POSTGRES_SCHEMA, INITIAL_DATA } from './schema.js';
+import { SQLITE_SCHEMA, POSTGRES_SCHEMA, INITIAL_DATA, CONJUGATION_DATA } from './schema.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs/promises';
@@ -113,6 +113,16 @@ async function initPostgres() {
         }
       }
     }
+    console.log('✅ Initial phrases loaded');
+
+    console.log('🔤 Loading verb conjugations...');
+    for (const conjugation of CONJUGATION_DATA) {
+      await client.query(
+        'INSERT INTO verb_conjugations (infinitive_el, infinitive_ru, person, form_el, form_ru, tense) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING',
+        [conjugation.infinitive_el, conjugation.infinitive_ru, conjugation.person, conjugation.form_el, conjugation.form_ru, conjugation.tense]
+      );
+    }
+    console.log('✅ Verb conjugations loaded');
 
     // Create default admin user
     const convertSqlToPostgres = (sql, params) => {
@@ -248,6 +258,23 @@ async function initSqlite() {
             }
           }
         }
+        console.log('✅ Initial phrases loaded');
+
+        // Load verb conjugations
+        console.log('🔤 Loading verb conjugations...');
+        for (const conjugation of CONJUGATION_DATA) {
+          await new Promise((res, rej) => {
+            sqlite.run(
+              'INSERT OR IGNORE INTO verb_conjugations (infinitive_el, infinitive_ru, person, form_el, form_ru, tense) VALUES (?, ?, ?, ?, ?, ?)',
+              [conjugation.infinitive_el, conjugation.infinitive_ru, conjugation.person, conjugation.form_el, conjugation.form_ru, conjugation.tense],
+              (err) => {
+                if (err) rej(err);
+                else res();
+              }
+            );
+          });
+        }
+        console.log('✅ Verb conjugations loaded');
 
         // Create default admin user
         await ensureAdminUser(async (sql, params, isGet) => {

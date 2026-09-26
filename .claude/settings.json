@@ -1,0 +1,23 @@
+{
+  "name": "Greek Trainer",
+  "description": "Full-stack Greek language learning platform",
+  "model": "claude-opus-5",
+  "permissions": {
+    "allow": ["read", "write", "bash", "git"],
+    "deny": []
+  },
+  "tools": {
+    "bash": {
+      "timeout": 120000,
+      "cwd": "/Users/evgeniinesterov/Projects/GreekTrainer"
+    }
+  },
+  "fileWatchers": {
+    "src": ["server/**/*.js", "public/**/*.html", "public/**/*.css"],
+    "db": ["server/db/**/*.js", "migrations/**/*.js"]
+  },
+  "documentation": {
+    "main": "CLAUDE.md",
+    "agents": ".claude/agents.md"
+  }
+}

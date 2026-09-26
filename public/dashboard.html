@@ -554,6 +554,7 @@
             { name: 'Карточки', icon: '🎴', id: 'flashcards' },
             { name: 'Письмо', icon: '✍️', id: 'writing' },
             { name: 'МИКС', icon: '🔥', id: 'mix' },
+            { name: 'Правила', icon: '📖', id: 'grammar-rules' },
             { name: 'Спряжение', icon: '⚡', id: 'conjugation' },
             { name: 'Неправильные глаголы', icon: '🎯', id: 'irregular' },
             { name: '1-е спряжение', icon: '🔗', id: 'first-conj' }
@@ -710,6 +711,8 @@
             loadExercise7(container);
         } else if (trainerId === 'mix') {
             loadMixMode(container);
+        } else if (trainerId === 'grammar-rules') {
+            loadGrammarRules(container);
         } else if (trainerId === 'conjugation') {
             loadConjugation(container);
         } else if (trainerId === 'irregular') {
@@ -1535,6 +1538,140 @@
             document.getElementById('vocab-list').innerHTML = html;
         } catch (error) {
             console.error('Error loading word details:', error);
+        }
+    }
+
+    async function loadGrammarRules(container) {
+        try {
+            const response = await fetch(API_BASE + '/conjugations');
+            const conjugations = await response.json();
+
+            // Group by verb
+            const grouped = {};
+            conjugations.forEach(c => {
+                if (!grouped[c.infinitive_el]) {
+                    grouped[c.infinitive_el] = {
+                        ru: c.infinitive_ru,
+                        persons: []
+                    };
+                }
+                grouped[c.infinitive_el].persons.push(c);
+            });
+
+            let html = `<h2>📖 Правила грамматики</h2>
+                <div style="margin-bottom: 20px; padding: 15px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid #667eea;">
+                    <p style="margin: 0;">📌 Выберите глагол для изучения спряжения</p>
+                </div>`;
+
+            // Show table for είμαι (быть)
+            const eimi = grouped['είμαι'];
+            if (eimi) {
+                html += `<div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">🌟 Глагол: ${eimi.ru} (${eimi.persons[0].infinitive_el})</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f0f0f0; border-bottom: 2px solid #667eea;">
+                                <th style="padding: 12px; text-align: left; font-weight: bold; color: #667eea;">Лицо</th>
+                                <th style="padding: 12px; text-align: left; font-weight: bold; color: #667eea;">Греческий</th>
+                                <th style="padding: 12px; text-align: left; font-weight: bold; color: #667eea;">Русский</th>
+                                <th style="padding: 12px; text-align: center; font-weight: bold; color: #667eea;">Звук</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+                // Sort by person order
+                const personOrder = ['Εγώ', 'Εσύ', 'Αυτός/Αυτή/Αυτό', 'Εμείς', 'Εσείς', 'Αυτοί/Αυτές/Αυτά'];
+                const sorted = eimi.persons.sort((a, b) => personOrder.indexOf(a.person) - personOrder.indexOf(b.person));
+
+                sorted.forEach((c, idx) => {
+                    const bgColor = idx % 2 === 0 ? 'white' : '#f9f9f9';
+                    html += `<tr style="background: ${bgColor}; border-bottom: 1px solid #eee;">
+                        <td style="padding: 12px; font-weight: bold;">${c.person}</td>
+                        <td style="padding: 12px; color: #667eea; font-weight: 600; font-size: 16px;">${c.form_el}</td>
+                        <td style="padding: 12px; color: #555;">${c.form_ru}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            <button onclick="speak('${c.form_el}')" style="background: #667eea; color: white; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 16px;">🔊</button>
+                        </td>
+                    </tr>`;
+                });
+
+                html += `</tbody></table>`;
+                html += `<div style="margin-top: 15px; padding: 12px; background: #f0f7ff; border-radius: 6px; font-size: 13px; color: #555;">
+                    <p><strong>💡 Примечание:</strong> Слово «${sorted[4].form_el}» употребляется как вежливая форма.</p>
+                </div>`;
+                html += `</div>`;
+            }
+
+            // Quiz section
+            html += `<div style="background: white; padding: 20px; border-radius: 8px;">
+                <h3 style="color: #667eea; margin-bottom: 15px;">🎯 Проверка знаний</h3>
+                <div id="quiz-container" style="margin-top: 15px;"></div>
+            </div>`;
+
+            container.innerHTML = html;
+
+            // Load quiz questions
+            await loadConjugationQuiz(container, conjugations);
+
+        } catch (error) {
+            console.error('❌ Error loading grammar rules:', error);
+            container.innerHTML = '<p>⚠️ Ошибка загрузки правил</p>';
+        }
+    }
+
+    async function loadConjugationQuiz(container, conjugations) {
+        try {
+            // Shuffle and pick one
+            const conj = conjugations[Math.floor(Math.random() * conjugations.length)];
+
+            // Get wrong answers (other forms)
+            let wrongAnswers = conjugations
+                .filter(c => c.person !== conj.person && c.infinitive_el === conj.infinitive_el)
+                .slice(0, 3);
+
+            while (wrongAnswers.length < 3) {
+                const random = conjugations[Math.floor(Math.random() * conjugations.length)];
+                if (!wrongAnswers.includes(random) && random.person !== conj.person) {
+                    wrongAnswers.push(random);
+                }
+            }
+
+            let options = [conj.form_el, ...wrongAnswers.map(w => w.form_el)];
+            shuffle(options);
+
+            let html = `<div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <p style="color: #999; margin: 0 0 10px 0;">Как спрягается глагол?</p>
+                <p style="font-size: 18px; font-weight: bold; margin: 0;">${conj.person} — "${conj.form_ru}"</p>
+            </div>
+            <div id="options" style="display: flex; flex-direction: column; gap: 10px;"></div>`;
+
+            const quizContainer = container.querySelector('#quiz-container');
+            quizContainer.innerHTML = html;
+
+            const optionsDiv = quizContainer.querySelector('#options');
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.style.cssText = 'padding: 12px; background: #f0f0f0; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: 600; text-align: left;';
+                btn.textContent = opt;
+                btn.onclick = () => {
+                    optionsDiv.querySelectorAll('button').forEach(b => b.disabled = true);
+                    if (opt === conj.form_el) {
+                        btn.style.background = '#2ecc71';
+                        btn.style.color = 'white';
+                        btn.style.borderColor = '#27ae60';
+                        speak(conj.form_el);
+                        setTimeout(() => loadConjugationQuiz(container, conjugations), 2000);
+                    } else {
+                        btn.style.background = '#ef4444';
+                        btn.style.color = 'white';
+                        btn.style.borderColor = '#dc2626';
+                    }
+                };
+                optionsDiv.appendChild(btn);
+            });
+
+        } catch (error) {
+            console.error('Error loading quiz:', error);
         }
     }
 </script>

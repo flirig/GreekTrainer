@@ -113,6 +113,16 @@ CREATE TABLE IF NOT EXISTS user_progress (
   is_correct BOOLEAN,
   timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS verb_conjugations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  infinitive_el TEXT NOT NULL,
+  infinitive_ru TEXT NOT NULL,
+  person TEXT NOT NULL,
+  form_el TEXT NOT NULL,
+  form_ru TEXT NOT NULL,
+  tense TEXT DEFAULT 'present',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 CREATE INDEX IF NOT EXISTS idx_user_progress_user_id ON user_progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_accent_variants_phrase_id ON accent_variants(phrase_id);
 CREATE INDEX IF NOT EXISTS idx_mistakes_phrase_id ON mistakes(phrase_id);
@@ -234,6 +244,16 @@ CREATE TABLE IF NOT EXISTS user_progress (
   is_correct BOOLEAN,
   timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS verb_conjugations (
+  id SERIAL PRIMARY KEY,
+  infinitive_el TEXT NOT NULL,
+  infinitive_ru TEXT NOT NULL,
+  person TEXT NOT NULL,
+  form_el TEXT NOT NULL,
+  form_ru TEXT NOT NULL,
+  tense TEXT DEFAULT 'present',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 CREATE INDEX IF NOT EXISTS idx_user_progress_user_id ON user_progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_accent_variants_phrase_id ON accent_variants(phrase_id);
 CREATE INDEX IF NOT EXISTS idx_mistakes_phrase_id ON mistakes(phrase_id);
@@ -276,5 +296,57 @@ export const INITIAL_DATA = [
     ru: "я разочарован в работе",
     accents: ["ειμαί απογοητευμένος από τη δουλειά", "είμαι απογοητευμενος άπο τη δουλειά", "είμαι απογοητευμένος από τή δουλειά"],
     mistakes: ["είμαι απογοητευμένος από το δουλειά", "είμε απογοητευμένος από τη δουλειά", "είμαι απογοητευμένος από τη δουλειάς"]
+  }
+];
+
+export const CONJUGATION_DATA = [
+  // Глагол "быть" - είμαι (présent tense)
+  {
+    infinitive_el: "είμαι",
+    infinitive_ru: "быть",
+    person: "Εγώ",
+    form_el: "είμαι",
+    form_ru: "я есть",
+    tense: "present"
+  },
+  {
+    infinitive_el: "είμαι",
+    infinitive_ru: "быть",
+    person: "Εσύ",
+    form_el: "είσαι",
+    form_ru: "ты есть",
+    tense: "present"
+  },
+  {
+    infinitive_el: "είμαι",
+    infinitive_ru: "быть",
+    person: "Αυτός/Αυτή/Αυτό",
+    form_el: "είναι",
+    form_ru: "он/она/оно есть",
+    tense: "present"
+  },
+  {
+    infinitive_el: "είμαι",
+    infinitive_ru: "быть",
+    person: "Εμείς",
+    form_el: "είμαστε",
+    form_ru: "мы есть",
+    tense: "present"
+  },
+  {
+    infinitive_el: "είμαι",
+    infinitive_ru: "быть",
+    person: "Εσείς",
+    form_el: "είστε",
+    form_ru: "вы есть",
+    tense: "present"
+  },
+  {
+    infinitive_el: "είμαι",
+    infinitive_ru: "быть",
+    person: "Αυτοί/Αυτές/Αυτά",
+    form_el: "είναι",
+    form_ru: "они есть",
+    tense: "present"
   }
 ];

@@ -5,52 +5,37 @@
  *
  * Loads data from greek-lexicon-parsed.json into the database
  * Updates word_paradigm mappings based on scraped paradigm codes
+ * Works with both SQLite (dev) and PostgreSQL (production)
  */
 
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import sqlite3 from 'sqlite3';
+import db from '../server/db/database.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DB_PATH = path.join(__dirname, '../data/trainer.db');
 const LEXICON_PATH = path.join(__dirname, '../data/greek-lexicon-parsed.json');
 
 class LexiconImporter {
   constructor() {
-    this.db = null;
+    this.database = null;
     this.imported = 0;
     this.skipped = 0;
     this.errors = 0;
   }
 
   async connect() {
-    return new Promise((resolve, reject) => {
-      this.db = new sqlite3.Database(DB_PATH, (err) => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
+    this.database = await db.get();
   }
 
   async run(sql, params = []) {
-    return new Promise((resolve, reject) => {
-      this.db.run(sql, params, function(err) {
-        if (err) reject(err);
-        else resolve(this);
-      });
-    });
+    return await this.database.run(sql, params);
   }
 
   async get(sql, params = []) {
-    return new Promise((resolve, reject) => {
-      this.db.get(sql, params, (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      });
-    });
+    return await this.database.get(sql, params);
   }
 
   loadLexicon() {

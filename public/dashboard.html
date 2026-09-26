@@ -1630,21 +1630,68 @@
         const selectorDiv = container.querySelector('#module-selector');
         const quizContainer = container.querySelector('#quiz-container');
 
-        // Create module buttons
+        // Store selected modules
+        let selectedModules = modules.map(m => m.id);
+
+        // Create header
+        const header = document.createElement('div');
+        header.style.cssText = 'margin-bottom: 15px; display: flex; align-items: center; gap: 10px;';
+        header.innerHTML = '<span style="font-weight: 600; color: #667eea;">Выбрать модули:</span>';
+
+        // Checkbox container (compact grid)
+        const checkboxContainer = document.createElement('div');
+        checkboxContainer.style.cssText = 'display: flex; flex-wrap: wrap; gap: 8px;';
+
         modules.forEach(module => {
-            const btn = document.createElement('button');
-            btn.style.cssText = 'padding: 10px 15px; background: #f0f0f0; border: 2px solid #ddd; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.3s;';
-            btn.innerHTML = `${module.icon} ${module.name}`;
-            btn.onclick = () => loadQuizModule(module, conjugations, quizContainer);
-            btn.onmouseover = () => btn.style.background = '#e0e0e0';
-            btn.onmouseout = () => btn.style.background = '#f0f0f0';
-            selectorDiv.appendChild(btn);
+            const label = document.createElement('label');
+            label.style.cssText = 'display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: #f9f9f9; border-radius: 6px; cursor: pointer; user-select: none; border: 2px solid #ddd; transition: all 0.3s;';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = true;
+            checkbox.style.cssText = 'cursor: pointer;';
+
+            checkbox.onchange = () => {
+                if (checkbox.checked) {
+                    if (!selectedModules.includes(module.id)) {
+                        selectedModules.push(module.id);
+                    }
+                    label.style.background = '#e8f5ff';
+                    label.style.borderColor = '#667eea';
+                } else {
+                    selectedModules = selectedModules.filter(id => id !== module.id);
+                    label.style.background = '#f9f9f9';
+                    label.style.borderColor = '#ddd';
+                }
+                // Reload with selected modules
+                loadMixMode(conjugations, quizContainer, modules.filter(m => selectedModules.includes(m.id)));
+            };
+
+            const text = document.createElement('span');
+            text.textContent = `${module.icon} ${module.name}`;
+            text.style.cssText = 'font-size: 13px; font-weight: 600;';
+
+            label.appendChild(checkbox);
+            label.appendChild(text);
+            checkboxContainer.appendChild(label);
         });
 
-        // Load first module by default
-        if (modules.length > 0) {
-            loadQuizModule(modules[0], conjugations, quizContainer);
+        selectorDiv.innerHTML = '';
+        selectorDiv.appendChild(header);
+        selectorDiv.appendChild(checkboxContainer);
+
+        // Load mix mode by default (all modules)
+        loadMixMode(conjugations, quizContainer, modules);
+    }
+
+    function loadMixMode(conjugations, container, selectedModules) {
+        if (!selectedModules || selectedModules.length === 0) {
+            container.innerHTML = '<p>⚠️ Выберите хотя бы один модуль</p>';
+            return;
         }
+
+        const module = selectedModules[Math.floor(Math.random() * selectedModules.length)];
+        loadQuizModule(module, conjugations, container);
     }
 
     function loadQuizModule(module, conjugations, container) {
@@ -1705,13 +1752,19 @@
                     break;
             }
 
-            const html = module.render(question, (isCorrect, answer) => {
+            const result = module.render(question, (isCorrect, answer) => {
                 if (isCorrect) {
                     setTimeout(() => loadQuizModule(module, conjugations, container), 2000);
                 }
             });
 
-            container.innerHTML = html;
+            // Handle both string HTML and DOM elements
+            container.innerHTML = '';
+            if (typeof result === 'string') {
+                container.innerHTML = result;
+            } else if (result instanceof Element) {
+                container.appendChild(result);
+            }
         } catch (error) {
             console.error('Error loading quiz module:', error);
         }

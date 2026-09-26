@@ -1,0 +1,25 @@
+{
+  "name": "greek-lexicon-scraper",
+  "version": "1.0.0",
+  "description": "Ethical scraper for Triantafyllides Modern Greek Lexicon - MVP data extraction",
+  "type": "module",
+  "main": "scraper.js",
+  "scripts": {
+    "start": "node scraper.js",
+    "scrape": "node scraper.js",
+    "scrape:verbose": "node scraper.js --verbose"
+  },
+  "keywords": [
+    "greek",
+    "lexicon",
+    "triantafyllides",
+    "education",
+    "scraper"
+  ],
+  "author": "GreekTrainer Contributors",
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "node-fetch": "^3.3.0"
+  }
+}

@@ -137,4 +137,294 @@ router.delete('/:id', verifyToken, requireAdmin, async (req, res) => {
   }
 });
 
+// ============================================
+// MORPHOLOGICAL API (NEW)
+// ============================================
+
+// Cache for paradigm rules (load once at startup)
+let PARADIGM_CACHE = {};
+let CACHE_LOADED = false;
+
+async function loadParadigmCache() {
+  if (CACHE_LOADED) return;
+
+  try {
+    const database = await db.get();
+
+    // Load all paradigm rules
+    const rulesQuery = `
+      SELECT
+        pr.id,
+        p.code as paradigm_code,
+        pr.tense,
+        pr.person,
+        pr.number,
+        pr.ending,
+        pr.example_form
+      FROM paradigm_rules pr
+      JOIN paradigms p ON pr.paradigm_id = p.id
+      ORDER BY p.code
+    `;
+
+    const rules = await database.all(rulesQuery);
+
+    // Index by paradigm code
+    const paradigmCodesQuery = 'SELECT DISTINCT code FROM paradigms ORDER BY code';
+    const paradigmCodes = await database.all(paradigmCodesQuery);
+
+    paradigmCodes.forEach(p => {
+      PARADIGM_CACHE[p.code] = [];
+    });
+
+    rules.forEach(r => {
+      if (!PARADIGM_CACHE[r.paradigm_code]) {
+        PARADIGM_CACHE[r.paradigm_code] = [];
+      }
+      PARADIGM_CACHE[r.paradigm_code].push(r);
+    });
+
+    CACHE_LOADED = true;
+    console.log('✅ Paradigm cache loaded:', Object.keys(PARADIGM_CACHE).length, 'paradigms');
+  } catch (e) {
+    console.error('❌ Failed to load paradigm cache:', e.message);
+  }
+}
+
+function extractStem(lemma, ending) {
+  if (!ending) return lemma;
+  if (lemma.endsWith(ending)) {
+    return lemma.slice(0, -ending.length);
+  }
+  return lemma.slice(0, -2);
+}
+
+// POST /api/words/synthesize
+// Generate Greek word form from lemma + morphological parameters
+router.post('/synthesize', async (req, res) => {
+  try {
+    await loadParadigmCache();
+
+    const { lemma, tense, person, number } = req.body;
+
+    if (!lemma || !tense || !person || !number) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameters: lemma, tense, person, number'
+      });
+    }
+
+    const database = await db.get();
+
+    // 1. Find word
+    const word = await database.get('SELECT id FROM words WHERE el = ?', [lemma]);
+
+    if (!word) {
+      return res.status(404).json({
+        success: false,
+        error: 'Word not found in lexicon',
+        lemma
+      });
+    }
+
+    // 2. Get word's paradigm
+    const wordParadigm = await database.get(`
+      SELECT p.code
+      FROM word_paradigm wp
+      JOIN paradigms p ON wp.paradigm_id = p.id
+      WHERE wp.word_id = ?
+    `, [word.id]);
+
+    if (!wordParadigm) {
+      return res.status(400).json({
+        success: false,
+        error: 'Word has no paradigm assigned',
+        lemma
+      });
+    }
+
+    const paradigmCode = wordParadigm.code;
+    const paradigmRules = PARADIGM_CACHE[paradigmCode];
+
+    if (!paradigmRules) {
+      return res.status(500).json({
+        success: false,
+        error: 'Paradigm not found in cache',
+        paradigmCode
+      });
+    }
+
+    // 3. Find matching rule
+    const rule = paradigmRules.find(r =>
+      r.tense === tense &&
+      r.person === person &&
+      r.number === number
+    );
+
+    if (!rule) {
+      return res.status(400).json({
+        success: false,
+        error: 'Rule not found for these parameters',
+        paradigm: paradigmCode,
+        tense,
+        person,
+        number
+      });
+    }
+
+    // 4. Generate form
+    const stem = extractStem(lemma, rule.ending);
+    const form = stem + rule.ending;
+
+    res.json({
+      success: true,
+      lemma,
+      form,
+      paradigm: paradigmCode,
+      tense,
+      person,
+      number,
+      confidence: 0.9,
+      rule_applied: `stem (${stem}) + ending (${rule.ending})`
+    });
+  } catch (error) {
+    console.error('❌ Synthesize error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// POST /api/words/analyze
+// Decompose a Greek word form into lemma + morphology
+router.post('/analyze', async (req, res) => {
+  try {
+    await loadParadigmCache();
+
+    const { form } = req.body;
+
+    if (!form) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameter: form'
+      });
+    }
+
+    const database = await db.get();
+
+    // 1. Check if it's a lemma (word in database)
+    const word = await database.get('SELECT id, el as lemma FROM words WHERE el = ?', [form]);
+
+    if (word) {
+      const paradigm = await database.get(`
+        SELECT p.code
+        FROM word_paradigm wp
+        JOIN paradigms p ON wp.paradigm_id = p.id
+        WHERE wp.word_id = ?
+      `, [word.id]);
+
+      return res.json({
+        success: true,
+        form,
+        lemma: word.lemma,
+        paradigm: paradigm?.code || null,
+        morphology: { type: 'lemma' },
+        confidence: 1.0
+      });
+    }
+
+    // 2. Search in paradigm rules (generated forms)
+    let bestMatch = null;
+
+    for (const [paradigmCode, rules] of Object.entries(PARADIGM_CACHE)) {
+      const rule = rules.find(r => r.example_form === form);
+      if (rule) {
+        bestMatch = { paradigmCode, rule };
+        break;
+      }
+    }
+
+    if (bestMatch) {
+      // Try to find a lemma with this paradigm
+      const lemmaRecord = await database.get(`
+        SELECT w.el as lemma
+        FROM word_paradigm wp
+        JOIN paradigms p ON wp.paradigm_id = p.id
+        JOIN words w ON wp.word_id = w.id
+        WHERE p.code = ?
+        LIMIT 1
+      `, [bestMatch.paradigmCode]);
+
+      return res.json({
+        success: true,
+        form,
+        lemma: lemmaRecord?.lemma || 'unknown',
+        paradigm: bestMatch.paradigmCode,
+        morphology: {
+          tense: bestMatch.rule.tense,
+          person: bestMatch.rule.person,
+          number: bestMatch.rule.number
+        },
+        confidence: 0.85
+      });
+    }
+
+    // Not found
+    res.status(404).json({
+      success: false,
+      error: 'Form not recognized in database',
+      form,
+      suggestions: ['Check spelling', 'Try with accents']
+    });
+  } catch (error) {
+    console.error('❌ Analyze error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// POST /api/words/validate
+// Check grammatical agreement in a phrase
+router.post('/validate', async (req, res) => {
+  try {
+    const { phrase } = req.body;
+
+    if (!Array.isArray(phrase)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Phrase must be an array of words'
+      });
+    }
+
+    if (phrase.length === 0) {
+      return res.json({
+        success: true,
+        phrase,
+        valid: true,
+        errors: []
+      });
+    }
+
+    // TODO: Implement full agreement checking
+    // For now: basic validation
+    res.json({
+      success: true,
+      phrase,
+      valid: true,
+      agreement: {
+        note: 'Agreement validation coming soon'
+      },
+      errors: []
+    });
+  } catch (error) {
+    console.error('❌ Validate error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 export default router;

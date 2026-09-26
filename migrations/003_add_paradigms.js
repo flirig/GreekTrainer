@@ -202,24 +202,28 @@ export async function up(db) {
 
   // 5. Insert paradigm rules
   console.log('💾 Inserting paradigm rules...');
-  let rulesInserted = 0;
 
-  for (const rule of PARADIGM_RULES) {
-    // Get paradigm_id
-    let paradigmId;
+  // First, cache paradigm IDs
+  const paradigmIdMap = {};
+  for (const paradigm of PARADIGMS) {
     const paradigmQuery = 'SELECT id FROM paradigms WHERE code = ?';
     const paradigmResult = db.constructor.name === 'Client'
-      ? await db.query('SELECT id FROM paradigms WHERE code = $1', [rule.paradigm_code])
+      ? await db.query('SELECT id FROM paradigms WHERE code = $1', [paradigm.code])
       : await new Promise((resolve, reject) => {
-          db.get(paradigmQuery, [rule.paradigm_code], (err, row) => {
+          db.get(paradigmQuery, [paradigm.code], (err, row) => {
             if (err) reject(err);
             resolve(row);
           });
         });
 
-    paradigmId = db.constructor.name === 'Client'
+    paradigmIdMap[paradigm.code] = db.constructor.name === 'Client'
       ? paradigmResult.rows[0]?.id
       : paradigmResult?.id;
+  }
+
+  let rulesInserted = 0;
+  for (const rule of PARADIGM_RULES) {
+    const paradigmId = paradigmIdMap[rule.paradigm_code];
 
     if (!paradigmId) {
       console.warn(`⚠️ Paradigm not found: ${rule.paradigm_code}`);
@@ -348,4 +352,24 @@ export async function down(db) {
   }
 
   console.log('✅ Rollback complete');
+}
+
+// Run migration if called directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  import('../server/db/database.js').then(({ default: db }) => {
+    db.get().then(database => {
+      up(database)
+        .then(() => {
+          console.log('✅ Paradigm migration completed successfully!');
+          process.exit(0);
+        })
+        .catch(err => {
+          console.error('❌ Migration failed:', err);
+          process.exit(1);
+        });
+    });
+  }).catch(err => {
+    console.error('❌ Failed to load database:', err);
+    process.exit(1);
+  });
 }

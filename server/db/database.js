@@ -5,7 +5,9 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs/promises';
 
-dotenv.config();
+// Load .env.local for development, .env for production
+const envFile = process.env.NODE_ENV === 'development' ? '.env.local' : '.env';
+dotenv.config({ path: join(process.cwd(), envFile) });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

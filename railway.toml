@@ -2,7 +2,6 @@
 buildCommand = "npm install"
 
 [deploy]
-preDeployCommand = "npm run migrate"
-startCommand = "npm start"
+startCommand = "node server/db/init.js && node migrate-paradigms.js && node scripts/import-lexicon.js && node server/index.js"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 5

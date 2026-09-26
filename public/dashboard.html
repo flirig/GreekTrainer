@@ -422,6 +422,7 @@
     </div>
 </div>
 
+<script src="./js/quiz-modules.js"></script>
 <script>
     const API_BASE = '/api';
     let token = localStorage.getItem('token');
@@ -1558,28 +1559,39 @@
                 grouped[c.infinitive_el].persons.push(c);
             });
 
-            let html = `<h2>📖 Правила грамматики</h2>
-                <div style="margin-bottom: 20px; padding: 15px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid #667eea;">
-                    <p style="margin: 0;">📌 Выберите глагол для изучения спряжения</p>
+            let html = `<h2>📖 Правила грамматики</h2>`;
+
+            // Quiz section (ABOVE rules)
+            html += `
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 2px solid #667eea;">
+                    <h3 style="color: #667eea; margin-top: 0; margin-bottom: 15px;">🎯 Проверка знаний</h3>
+                    <p style="color: #999; margin-bottom: 15px;">Выберите модуль проверки:</p>
+                    <div id="module-selector" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;"></div>
+                    <div id="quiz-container" style="margin-top: 15px; padding: 15px; background: #f9f9f9; border-radius: 8px;"></div>
                 </div>`;
 
-            // Show table for είμαι (быть)
+            // Rules section (BELOW, collapsible)
             const eimi = grouped['είμαι'];
             if (eimi) {
-                html += `<div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                    <h3 style="color: #667eea; margin-bottom: 15px;">🌟 Глагол: ${eimi.ru} (${eimi.persons[0].infinitive_el})</h3>
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background: #f0f0f0; border-bottom: 2px solid #667eea;">
-                                <th style="padding: 12px; text-align: left; font-weight: bold; color: #667eea;">Лицо</th>
-                                <th style="padding: 12px; text-align: left; font-weight: bold; color: #667eea;">Греческий</th>
-                                <th style="padding: 12px; text-align: left; font-weight: bold; color: #667eea;">Русский</th>
-                                <th style="padding: 12px; text-align: center; font-weight: bold; color: #667eea;">Звук</th>
-                            </tr>
-                        </thead>
-                        <tbody>`;
+                const ruleId = 'grammar-rules-table-' + Math.random().toString(36).substr(2, 9);
+                html += `
+                    <div style="background: white; padding: 0; border-radius: 8px; overflow: hidden; border: 1px solid #ddd;">
+                        <button onclick="toggleCollapse('${ruleId}')" style="width: 100%; padding: 15px 20px; background: #f0f7ff; border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; color: #667eea; hover: background: #e0ecff;">
+                            <span>🌟 Глагол: ${eimi.ru} (${eimi.persons[0].infinitive_el})</span>
+                            <span id="collapse-icon-${ruleId}" style="font-size: 20px;">▼</span>
+                        </button>
+                        <div id="${ruleId}" style="padding: 20px; display: block;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #f0f0f0; border-bottom: 2px solid #667eea;">
+                                        <th style="padding: 12px; text-align: left; font-weight: bold; color: #667eea;">Лицо</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: bold; color: #667eea;">Греческий</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: bold; color: #667eea;">Русский</th>
+                                        <th style="padding: 12px; text-align: center; font-weight: bold; color: #667eea;">Звук</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
 
-                // Sort by person order
                 const personOrder = ['Εγώ', 'Εσύ', 'Αυτός/Αυτή/Αυτό', 'Εμείς', 'Εσείς', 'Αυτοί/Αυτές/Αυτά'];
                 const sorted = eimi.persons.sort((a, b) => personOrder.indexOf(a.person) - personOrder.indexOf(b.person));
 
@@ -1597,21 +1609,15 @@
 
                 html += `</tbody></table>`;
                 html += `<div style="margin-top: 15px; padding: 12px; background: #f0f7ff; border-radius: 6px; font-size: 13px; color: #555;">
-                    <p><strong>💡 Примечание:</strong> Слово «${sorted[4].form_el}» употребляется как вежливая форма.</p>
+                    <p style="margin: 0;"><strong>💡 Примечание:</strong> Слово «${sorted[4].form_el}» употребляется как вежливая форма.</p>
                 </div>`;
-                html += `</div>`;
+                html += `</div></div>`;
             }
-
-            // Quiz section
-            html += `<div style="background: white; padding: 20px; border-radius: 8px;">
-                <h3 style="color: #667eea; margin-bottom: 15px;">🎯 Проверка знаний</h3>
-                <div id="quiz-container" style="margin-top: 15px;"></div>
-            </div>`;
 
             container.innerHTML = html;
 
-            // Load quiz questions
-            await loadConjugationQuiz(container, conjugations);
+            // Initialize module selector
+            await initModuleSelector(container, conjugations);
 
         } catch (error) {
             console.error('❌ Error loading grammar rules:', error);
@@ -1619,59 +1625,107 @@
         }
     }
 
-    async function loadConjugationQuiz(container, conjugations) {
+    async function initModuleSelector(container, conjugations) {
+        const modules = Object.values(window.QuizModules).filter(m => m.render);
+        const selectorDiv = container.querySelector('#module-selector');
+        const quizContainer = container.querySelector('#quiz-container');
+
+        // Create module buttons
+        modules.forEach(module => {
+            const btn = document.createElement('button');
+            btn.style.cssText = 'padding: 10px 15px; background: #f0f0f0; border: 2px solid #ddd; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.3s;';
+            btn.innerHTML = `${module.icon} ${module.name}`;
+            btn.onclick = () => loadQuizModule(module, conjugations, quizContainer);
+            btn.onmouseover = () => btn.style.background = '#e0e0e0';
+            btn.onmouseout = () => btn.style.background = '#f0f0f0';
+            selectorDiv.appendChild(btn);
+        });
+
+        // Load first module by default
+        if (modules.length > 0) {
+            loadQuizModule(modules[0], conjugations, quizContainer);
+        }
+    }
+
+    function loadQuizModule(module, conjugations, container) {
         try {
-            // Shuffle and pick one
-            const conj = conjugations[Math.floor(Math.random() * conjugations.length)];
+            let question = {};
 
-            // Get wrong answers (other forms)
-            let wrongAnswers = conjugations
-                .filter(c => c.person !== conj.person && c.infinitive_el === conj.infinitive_el)
-                .slice(0, 3);
+            switch (module.id) {
+                case 'pronoun-choice':
+                    question = {
+                        text: 'είμαι ευχαριστημένος',
+                        correct: 'Εγώ'
+                    };
+                    break;
 
-            while (wrongAnswers.length < 3) {
-                const random = conjugations[Math.floor(Math.random() * conjugations.length)];
-                if (!wrongAnswers.includes(random) && random.person !== conj.person) {
-                    wrongAnswers.push(random);
-                }
+                case 'accent-choice':
+                    const variants = ['είμαι', 'είμαι', 'ειμαι'];
+                    question = {
+                        text: 'Правильная форма глагола',
+                        correct: 'είμαι',
+                        variants: variants
+                    };
+                    break;
+
+                case 'translate-gr-ru':
+                    const conj = conjugations[Math.floor(Math.random() * conjugations.length)];
+                    question = {
+                        text: conj.form_el,
+                        correct: conj.form_ru,
+                        wrongOptions: ['я есть', 'ты есть', 'он есть', 'она есть', 'они есть'].filter(o => o !== conj.form_ru)
+                    };
+                    break;
+
+                case 'translate-ru-gr':
+                    const conj2 = conjugations[Math.floor(Math.random() * conjugations.length)];
+                    question = {
+                        text: conj2.form_ru,
+                        correct: conj2.form_el,
+                        wrongOptions: conjugations.map(c => c.form_el).filter(f => f !== conj2.form_el).slice(0, 3)
+                    };
+                    break;
+
+                case 'listen-select':
+                    const conj3 = conjugations[Math.floor(Math.random() * conjugations.length)];
+                    question = {
+                        text: conj3.form_el,
+                        correct: conj3.form_el,
+                        wrongOptions: conjugations.map(c => c.form_el).filter(f => f !== conj3.form_el).slice(0, 3)
+                    };
+                    break;
+
+                case 'fill-blank':
+                    const conj4 = conjugations[Math.floor(Math.random() * conjugations.length)];
+                    question = {
+                        sentence: `${conj4.person} _______ ευχαριστημένος/η`,
+                        correct: conj4.form_el,
+                        wrongOptions: conjugations.map(c => c.form_el).filter(f => f !== conj4.form_el).slice(0, 3)
+                    };
+                    break;
             }
 
-            let options = [conj.form_el, ...wrongAnswers.map(w => w.form_el)];
-            shuffle(options);
-
-            let html = `<div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                <p style="color: #999; margin: 0 0 10px 0;">Как спрягается глагол?</p>
-                <p style="font-size: 18px; font-weight: bold; margin: 0;">${conj.person} — "${conj.form_ru}"</p>
-            </div>
-            <div id="options" style="display: flex; flex-direction: column; gap: 10px;"></div>`;
-
-            const quizContainer = container.querySelector('#quiz-container');
-            quizContainer.innerHTML = html;
-
-            const optionsDiv = quizContainer.querySelector('#options');
-            options.forEach(opt => {
-                const btn = document.createElement('button');
-                btn.style.cssText = 'padding: 12px; background: #f0f0f0; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: 600; text-align: left;';
-                btn.textContent = opt;
-                btn.onclick = () => {
-                    optionsDiv.querySelectorAll('button').forEach(b => b.disabled = true);
-                    if (opt === conj.form_el) {
-                        btn.style.background = '#2ecc71';
-                        btn.style.color = 'white';
-                        btn.style.borderColor = '#27ae60';
-                        speak(conj.form_el);
-                        setTimeout(() => loadConjugationQuiz(container, conjugations), 2000);
-                    } else {
-                        btn.style.background = '#ef4444';
-                        btn.style.color = 'white';
-                        btn.style.borderColor = '#dc2626';
-                    }
-                };
-                optionsDiv.appendChild(btn);
+            const html = module.render(question, (isCorrect, answer) => {
+                if (isCorrect) {
+                    setTimeout(() => loadQuizModule(module, conjugations, container), 2000);
+                }
             });
 
+            container.innerHTML = html;
         } catch (error) {
-            console.error('Error loading quiz:', error);
+            console.error('Error loading quiz module:', error);
+        }
+    }
+
+    function toggleCollapse(elementId) {
+        const el = document.getElementById(elementId);
+        const icon = document.getElementById('collapse-icon-' + elementId);
+        if (el.style.display === 'none') {
+            el.style.display = 'block';
+            icon.textContent = '▼';
+        } else {
+            el.style.display = 'none';
+            icon.textContent = '▶';
         }
     }
 </script>

@@ -2,7 +2,7 @@ import sqlite3 from 'sqlite3';
 import pg from 'pg';
 const { Client } = pg;
 import bcrypt from 'bcrypt';
-import { SQLITE_SCHEMA, POSTGRES_SCHEMA, INITIAL_DATA, CONJUGATION_DATA } from './schema.js';
+import { SQLITE_SCHEMA, POSTGRES_SCHEMA, INITIAL_DATA, CONJUGATION_DATA, GRAMMAR_TOPICS, NOUN_ARTICLES_DATA } from './schema.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs/promises';
@@ -128,6 +128,26 @@ async function initPostgres() {
       );
     }
     console.log('✅ Verb conjugations loaded');
+
+    console.log('📚 Loading grammar topics...');
+    await client.query('DELETE FROM grammar_topics');
+    for (const topic of GRAMMAR_TOPICS) {
+      await client.query(
+        'INSERT INTO grammar_topics (name, name_ru, icon, description) VALUES ($1, $2, $3, $4)',
+        [topic.name, topic.name_ru, topic.icon, topic.description]
+      );
+    }
+    console.log('✅ Grammar topics loaded');
+
+    console.log('📄 Loading noun articles...');
+    await client.query('DELETE FROM noun_articles');
+    for (const article of NOUN_ARTICLES_DATA) {
+      await client.query(
+        'INSERT INTO noun_articles (noun_el, noun_ru, gender, article_el, example_el, example_ru) VALUES ($1, $2, $3, $4, $5, $6)',
+        [article.noun_el, article.noun_ru, article.gender, article.article_el, article.example_el, article.example_ru]
+      );
+    }
+    console.log('✅ Noun articles loaded');
 
     // Create default admin user
     const convertSqlToPostgres = (sql, params) => {
@@ -267,7 +287,6 @@ async function initSqlite() {
 
         // Load verb conjugations
         console.log('🔤 Loading verb conjugations...');
-        // Clear old data first
         await new Promise((res, rej) => {
           sqlite.run('DELETE FROM verb_conjugations', (err) => {
             if (err) rej(err);
@@ -287,6 +306,50 @@ async function initSqlite() {
           });
         }
         console.log('✅ Verb conjugations loaded');
+
+        // Load grammar topics
+        console.log('📚 Loading grammar topics...');
+        await new Promise((res, rej) => {
+          sqlite.run('DELETE FROM grammar_topics', (err) => {
+            if (err) rej(err);
+            else res();
+          });
+        });
+        for (const topic of GRAMMAR_TOPICS) {
+          await new Promise((res, rej) => {
+            sqlite.run(
+              'INSERT INTO grammar_topics (name, name_ru, icon, description) VALUES (?, ?, ?, ?)',
+              [topic.name, topic.name_ru, topic.icon, topic.description],
+              (err) => {
+                if (err) rej(err);
+                else res();
+              }
+            );
+          });
+        }
+        console.log('✅ Grammar topics loaded');
+
+        // Load noun articles
+        console.log('📄 Loading noun articles...');
+        await new Promise((res, rej) => {
+          sqlite.run('DELETE FROM noun_articles', (err) => {
+            if (err) rej(err);
+            else res();
+          });
+        });
+        for (const article of NOUN_ARTICLES_DATA) {
+          await new Promise((res, rej) => {
+            sqlite.run(
+              'INSERT INTO noun_articles (noun_el, noun_ru, gender, article_el, example_el, example_ru) VALUES (?, ?, ?, ?, ?, ?)',
+              [article.noun_el, article.noun_ru, article.gender, article.article_el, article.example_el, article.example_ru],
+              (err) => {
+                if (err) rej(err);
+                else res();
+              }
+            );
+          });
+        }
+        console.log('✅ Noun articles loaded');
 
         // Create default admin user
         await ensureAdminUser(async (sql, params, isGet) => {

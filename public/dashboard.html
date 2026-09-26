@@ -555,6 +555,7 @@
             { name: 'Карточки', icon: '🎴', id: 'flashcards' },
             { name: 'Письмо', icon: '✍️', id: 'writing' },
             { name: 'МИКС', icon: '🔥', id: 'mix' },
+            { name: 'Грамматика', icon: '📚', id: 'grammar-trainer' },
             { name: 'Правила', icon: '📖', id: 'grammar-rules' },
             { name: 'Спряжение', icon: '⚡', id: 'conjugation' },
             { name: 'Неправильные глаголы', icon: '🎯', id: 'irregular' },
@@ -712,6 +713,8 @@
             loadExercise7(container);
         } else if (trainerId === 'mix') {
             loadMixMode(container);
+        } else if (trainerId === 'grammar-trainer') {
+            loadGrammarTrainer(container);
         } else if (trainerId === 'grammar-rules') {
             loadGrammarRules(container);
         } else if (trainerId === 'conjugation') {
@@ -1539,6 +1542,144 @@
             document.getElementById('vocab-list').innerHTML = html;
         } catch (error) {
             console.error('Error loading word details:', error);
+        }
+    }
+
+    async function loadGrammarTrainer(container) {
+        try {
+            const topicsRes = await fetch(API_BASE + '/grammar/topics');
+            const topics = await topicsRes.json();
+
+            let html = `<h2>📚 Тренажер грамматики</h2>
+                <div style="margin-bottom: 20px; padding: 15px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid #667eea;">
+                    <p style="margin: 0;">📌 Выберите грамматическую тему для тренировки</p>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px;" id="topic-selector"></div>
+                <div id="grammar-content" style="display: none; background: white; padding: 20px; border-radius: 8px;"></div>`;
+
+            container.innerHTML = html;
+
+            const topicSelector = container.querySelector('#topic-selector');
+            const contentDiv = container.querySelector('#grammar-content');
+
+            topics.forEach(topic => {
+                const btn = document.createElement('button');
+                btn.style.cssText = 'padding: 12px 18px; background: #f0f0f0; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;';
+                btn.innerHTML = `${topic.icon} ${topic.name_ru}`;
+                btn.onclick = () => {
+                    topicSelector.querySelectorAll('button').forEach(b => {
+                        b.style.background = '#f0f0f0';
+                        b.style.color = 'black';
+                    });
+                    btn.style.background = '#667eea';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#667eea';
+                    loadGrammarTopic(topic, contentDiv);
+                };
+                topicSelector.appendChild(btn);
+            });
+
+        } catch (error) {
+            console.error('❌ Error loading grammar trainer:', error);
+            container.innerHTML = '<p>⚠️ Ошибка загрузки тренажера</p>';
+        }
+    }
+
+    async function loadGrammarTopic(topic, container) {
+        if (topic.name === 'definite-article') {
+            loadArticleTrainer(container);
+        } else if (topic.name === 'verb-be') {
+            loadGrammarRules(container);
+        }
+    }
+
+    async function loadArticleTrainer(container) {
+        try {
+            const nounsRes = await fetch(API_BASE + '/grammar/nouns');
+            const nouns = await nounsRes.json();
+
+            let html = `<h3 style="color: #667eea; margin-bottom: 15px;">📄 Определённые артикли (ο, η, το)</h3>
+                <div style="margin-bottom: 20px; padding: 15px; background: #f0f7ff; border-radius: 8px;">
+                    <p style="margin: 0 0 10px 0;"><strong>🎯 Проверка знаний</strong></p>
+                    <div id="article-quiz" style="margin-top: 15px;"></div>
+                </div>
+                <div style="background: #f9f9f9; padding: 20px; border-radius: 8px;">
+                    <button onclick="toggleCollapse('article-rules')" style="width: 100%; padding: 12px; background: #f0f7ff; border: none; cursor: pointer; border-radius: 6px; font-weight: 600; color: #667eea; display: flex; justify-content: space-between;">
+                        <span>▼ Таблица артиклей</span>
+                        <span id="article-rules-icon">▼</span>
+                    </button>
+                    <div id="article-rules" style="padding: 20px; display: block;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f0f0f0; border-bottom: 2px solid #667eea;">
+                                    <th style="padding: 12px; text-align: left; font-weight: bold; color: #667eea;">Род</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: bold; color: #667eea;">Артикль</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: bold; color: #667eea;">Пример</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: bold; color: #667eea;">Перевод</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background: white; border-bottom: 1px solid #eee;">
+                                    <td style="padding: 12px; font-weight: bold;">Αρσενικό (м.р.)</td>
+                                    <td style="padding: 12px; color: #667eea; font-weight: 600; font-size: 16px;">ο</td>
+                                    <td style="padding: 12px; color: #667eea; font-weight: 600;">ο πατέρας</td>
+                                    <td style="padding: 12px; color: #555;">отец</td>
+                                </tr>
+                                <tr style="background: #f9f9f9; border-bottom: 1px solid #eee;">
+                                    <td style="padding: 12px; font-weight: bold;">Θηλυκό (ж.р.)</td>
+                                    <td style="padding: 12px; color: #667eea; font-weight: 600; font-size: 16px;">η</td>
+                                    <td style="padding: 12px; color: #667eea; font-weight: 600;">η μητέρα</td>
+                                    <td style="padding: 12px; color: #555;">мать</td>
+                                </tr>
+                                <tr style="background: white; border-bottom: 1px solid #eee;">
+                                    <td style="padding: 12px; font-weight: bold;">Ουδέτερο (с.р.)</td>
+                                    <td style="padding: 12px; color: #667eea; font-weight: 600; font-size: 16px;">το</td>
+                                    <td style="padding: 12px; color: #667eea; font-weight: 600;">το παιδί</td>
+                                    <td style="padding: 12px; color: #555;">ребёнок</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div style="margin-top: 15px; padding: 12px; background: #f0f7ff; border-radius: 6px; font-size: 13px; color: #555;">
+                            <p style="margin: 0;"><strong>💡 Примечание:</strong> Артикль согласуется с существительным по роду.</p>
+                        </div>
+                    </div>
+                </div>`;
+
+            container.innerHTML = html;
+            container.style.display = 'block';
+
+            const quizDiv = container.querySelector('#article-quiz');
+            if (window.QuizModules && window.QuizModules.chooseArticle && nouns && nouns.length > 0) {
+                loadArticleQuiz(quizDiv, nouns);
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading article trainer:', error);
+            container.innerHTML = '<p>⚠️ Ошибка загрузки тренажера</p>';
+        }
+    }
+
+    async function loadArticleQuiz(container, nouns) {
+        if (!nouns || nouns.length === 0) return;
+
+        const module = window.QuizModules.chooseArticle;
+        const noun = nouns[Math.floor(Math.random() * nouns.length)];
+
+        const question = {
+            noun_el: noun.noun_el,
+            noun_ru: noun.noun_ru,
+            article_el: noun.article_el
+        };
+
+        const result = module.render(question, (isCorrect, answer) => {
+            if (isCorrect) {
+                setTimeout(() => loadArticleQuiz(container, nouns), 2000);
+            }
+        });
+
+        container.innerHTML = '';
+        if (result instanceof Element) {
+            container.appendChild(result);
         }
     }
 

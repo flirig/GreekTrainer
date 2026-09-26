@@ -217,6 +217,38 @@ window.QuizModules = {
       container.appendChild(optionsDiv);
       return container;
     }
+  },
+
+  chooseArticle: {
+    name: 'Выбрать артикль',
+    icon: '📄',
+    id: 'choose-article',
+    render(question, onAnswer) {
+      const articles = ['ο', 'η', 'το'];
+      const container = document.createElement('div');
+      const header = document.createElement('div');
+      header.style.cssText = 'background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 15px;';
+      header.innerHTML = `<p style="color: #999; margin: 0 0 10px 0;">Выберите правильный артикль:</p><p style="font-size: 20px; font-weight: bold; margin: 0; color: #667eea;">___ ${question.noun_el}</p><p style="color: #999; font-size: 13px; margin: 8px 0 0 0;">(${question.noun_ru})</p>`;
+      container.appendChild(header);
+      const optionsDiv = document.createElement('div');
+      optionsDiv.style.cssText = 'display: flex; gap: 10px;';
+      articles.forEach(article => {
+        const btn = document.createElement('button');
+        btn.style.cssText = 'flex: 1; padding: 16px; background: #f0f0f0; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 18px;';
+        btn.textContent = article;
+        btn.onclick = () => {
+          optionsDiv.querySelectorAll('button').forEach(b => b.style.pointerEvents = 'none');
+          const isCorrect = article === question.article_el;
+          btn.style.background = isCorrect ? '#2ecc71' : '#ef4444';
+          btn.style.color = 'white';
+          btn.style.borderColor = isCorrect ? '#27ae60' : '#dc2626';
+          if (onAnswer) onAnswer(isCorrect, article);
+        };
+        optionsDiv.appendChild(btn);
+      });
+      container.appendChild(optionsDiv);
+      return container;
+    }
   }
 };
 

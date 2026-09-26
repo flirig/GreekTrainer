@@ -113,6 +113,14 @@ CREATE TABLE IF NOT EXISTS user_progress (
   is_correct BOOLEAN,
   timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS grammar_topics (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  name_ru TEXT NOT NULL,
+  icon TEXT,
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 CREATE TABLE IF NOT EXISTS verb_conjugations (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   infinitive_el TEXT NOT NULL,
@@ -123,6 +131,17 @@ CREATE TABLE IF NOT EXISTS verb_conjugations (
   tense TEXT DEFAULT 'present',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(infinitive_el, person, tense)
+);
+CREATE TABLE IF NOT EXISTS noun_articles (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  noun_el TEXT NOT NULL,
+  noun_ru TEXT NOT NULL,
+  gender TEXT NOT NULL,
+  article_el TEXT NOT NULL,
+  example_el TEXT,
+  example_ru TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(noun_el, gender)
 );
 CREATE INDEX IF NOT EXISTS idx_user_progress_user_id ON user_progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_accent_variants_phrase_id ON accent_variants(phrase_id);
@@ -245,6 +264,14 @@ CREATE TABLE IF NOT EXISTS user_progress (
   is_correct BOOLEAN,
   timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS grammar_topics (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  name_ru TEXT NOT NULL,
+  icon TEXT,
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 CREATE TABLE IF NOT EXISTS verb_conjugations (
   id SERIAL PRIMARY KEY,
   infinitive_el TEXT NOT NULL,
@@ -255,6 +282,17 @@ CREATE TABLE IF NOT EXISTS verb_conjugations (
   tense TEXT DEFAULT 'present',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(infinitive_el, person, tense)
+);
+CREATE TABLE IF NOT EXISTS noun_articles (
+  id SERIAL PRIMARY KEY,
+  noun_el TEXT NOT NULL,
+  noun_ru TEXT NOT NULL,
+  gender TEXT NOT NULL,
+  article_el TEXT NOT NULL,
+  example_el TEXT,
+  example_ru TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(noun_el, gender)
 );
 CREATE INDEX IF NOT EXISTS idx_user_progress_user_id ON user_progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_accent_variants_phrase_id ON accent_variants(phrase_id);
@@ -299,6 +337,36 @@ export const INITIAL_DATA = [
     accents: ["ειμαί απογοητευμένος από τη δουλειά", "είμαι απογοητευμενος άπο τη δουλειά", "είμαι απογοητευμένος από τή δουλειά"],
     mistakes: ["είμαι απογοητευμένος από το δουλειά", "είμε απογοητευμένος από τη δουλειά", "είμαι απογοητευμένος από τη δουλειάς"]
   }
+];
+
+export const GRAMMAR_TOPICS = [
+  {
+    name: 'verb-be',
+    name_ru: 'Глагол "быть" (είμαι)',
+    icon: '⚡',
+    description: 'Спряжение глагола είμαι в настоящем времени'
+  },
+  {
+    name: 'definite-article',
+    name_ru: 'Определённые артикли (ο, η, το)',
+    icon: '📄',
+    description: 'Определённые артикли греческого языка по родам'
+  }
+];
+
+export const NOUN_ARTICLES_DATA = [
+  { noun_el: 'πατέρας', noun_ru: 'отец', gender: 'Αρσενικό', article_el: 'ο', example_el: 'ο πατέρας', example_ru: 'отец' },
+  { noun_el: 'αδελφός', noun_ru: 'брат', gender: 'Αρσενικό', article_el: 'ο', example_el: 'ο αδελφός', example_ru: 'брат' },
+  { noun_el: 'κύριος', noun_ru: 'господин', gender: 'Αρσενικό', article_el: 'ο', example_el: 'ο κύριος', example_ru: 'господин' },
+  { noun_el: 'δάσκαλος', noun_ru: 'учитель', gender: 'Αρσενικό', article_el: 'ο', example_el: 'ο δάσκαλος', example_ru: 'учитель' },
+  { noun_el: 'μητέρα', noun_ru: 'мать', gender: 'Θηλυκό', article_el: 'η', example_el: 'η μητέρα', example_ru: 'мать' },
+  { noun_el: 'αδελφή', noun_ru: 'сестра', gender: 'Θηλυκό', article_el: 'η', example_el: 'η αδελφή', example_ru: 'сестра' },
+  { noun_el: 'κυρία', noun_ru: 'госпожа', gender: 'Θηλυκό', article_el: 'η', example_el: 'η κυρία', example_ru: 'госпожа' },
+  { noun_el: 'δασκάλα', noun_ru: 'учительница', gender: 'Θηλυκό', article_el: 'η', example_el: 'η δασκάλα', example_ru: 'учительница' },
+  { noun_el: 'παιδί', noun_ru: 'ребёнок', gender: 'Ουδέτερο', article_el: 'το', example_el: 'το παιδί', example_ru: 'ребёнок' },
+  { noun_el: 'σπίτι', noun_ru: 'дом', gender: 'Ουδέτερο', article_el: 'το', example_el: 'το σπίτι', example_ru: 'дом' },
+  { noun_el: 'δέντρο', noun_ru: 'дерево', gender: 'Ουδέτερο', article_el: 'το', example_el: 'το δέντρο', example_ru: 'дерево' },
+  { noun_el: 'βιβλίο', noun_ru: 'книга', gender: 'Ουδέτερο', article_el: 'το', example_el: 'το βιβλίο', example_ru: 'книга' }
 ];
 
 export const CONJUGATION_DATA = [

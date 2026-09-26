@@ -49,7 +49,10 @@ GreekTrainer/
 │       ├── schema.js               # Schema definitions + seed data
 │       └── init.js                 # DB initialization & migrations
 ├── public/
-│   └── index.html                  # SPA frontend (7 exercise types)
+│   ├── dashboard.html              # SPA frontend (14+ exercise types)
+│   ├── admin.html                  # Admin panel
+│   └── js/
+│       └── quiz-modules.js         # 🆕 Reusable quiz module system
 ├── migrations/                      # (active) DB migration files
 ├── data/                           # SQLite DB file (local only)
 ├── .claude/
@@ -63,17 +66,48 @@ GreekTrainer/
 
 ---
 
-## 🎮 Frontend: 7 Exercise Types
+## 🎮 Frontend: 14+ Exercise Types
 
-All implemented in `public/index.html`:
+All implemented in `public/dashboard.html`:
 
 1. **Словарь (Dictionary)** — Match Greek ↔ Russian
-2. **Слово (Fill-word)** — Complete Greek sentence
-3. **Перевод (Translation)** — Translate Russian → Greek
-4. **На слух (Listening)** — Listen and select correct phrase
-5. **Ударения (Accents)** — Choose correct accent position
-6. **Ошибки (Errors)** — Find mistake in phrase variant
-7. **Карточки (Flashcards)** — Swipe through cards
+2. **Словарь БД** — Database vocabulary
+3. **Подстановка (Fill-word)** — Complete Greek sentence
+4. **Перевод (Translation)** — Translate Russian ↔ Greek
+5. **Аудио (Listening)** — Listen and select correct phrase
+6. **Ударения (Accents)** — Choose correct accent position
+7. **Ошибки (Errors)** — Find mistake in phrase variant
+8. **Карточки (Flashcards)** — Swipe through cards
+9. **Письмо (Writing)** — Write Greek text
+10. **🔥 МИКС (Mix)** — Random exercises with streak system
+11. **📖 Правила (Grammar Rules)** — Learn conjugations with interactive modules
+12. **Спряжение (Conjugation)** — Verb conjugation practice
+13. **Неправильные глаголы (Irregular Verbs)**
+14. **1-е спряжение (First Conjugation)**
+
+### 🆕 Quiz Modules System (`public/js/quiz-modules.js`)
+
+**Reusable quiz modules for all exercises:**
+
+1. **accentChoice** 📍 — Select word with correct accent
+2. **pronounChoice** 👤 — Select correct pronoun/person
+3. **translateGreekToRussian** 🌐 — Greek → Russian translation
+4. **translateRussianToGreek** 🇬🇷 — Russian → Greek translation
+5. **listenAndSelect** 🔊 — Listen and pick correct word
+6. **fillInBlank** ✏️ — Fill blank with correct form
+
+**Used in:**
+- Grammar Rules trainer (6 modules available)
+- Will be integrated into other exercises
+
+**Example usage:**
+```javascript
+const module = window.QuizModules.accentChoice;
+const html = module.render(question, (isCorrect, answer) => {
+  if (isCorrect) loadNextQuestion();
+});
+container.innerHTML = html;
+```
 
 ### 🔥 МИКС Mode
 - Randomizes all exercise types

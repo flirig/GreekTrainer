@@ -67,6 +67,9 @@ async function initPostgres() {
 
   try {
     console.log('📝 Creating schema...');
+    // Drop old verb_conjugations table if exists (to recreate with UNIQUE constraint)
+    await client.query('DROP TABLE IF EXISTS verb_conjugations CASCADE');
+
     const statements = POSTGRES_SCHEMA
       .split(';')
       .map(s => s.trim())

@@ -385,6 +385,45 @@ router.post('/analyze', async (req, res) => {
   }
 });
 
+// POST /api/admin/import-lexicon
+// Temporary endpoint to import 50 words
+router.post('/admin/import-lexicon', async (req, res) => {
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    const { fileURLToPath } = await import('url');
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+    const lexiconPath = path.join(__dirname, '../../data/greek-lexicon-parsed.json');
+    const data = JSON.parse(fs.readFileSync(lexiconPath, 'utf8'));
+
+    const database = await db.get();
+    let imported = 0;
+
+    for (const word of data) {
+      try {
+        await database.run(
+          'INSERT INTO words (el, ru) VALUES (?, ?) ON CONFLICT DO NOTHING',
+          [word.el, word.ru || 'translation needed']
+        );
+        imported++;
+      } catch(e) {}
+    }
+
+    res.json({
+      success: true,
+      imported,
+      message: `Imported ${imported} words`
+    });
+  } catch (error) {
+    console.error('❌ Import error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // POST /api/words/validate
 // Check grammatical agreement in a phrase
 router.post('/validate', async (req, res) => {

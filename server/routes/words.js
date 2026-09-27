@@ -385,6 +385,81 @@ router.post('/analyze', async (req, res) => {
   }
 });
 
+// POST /api/admin/setup-paradigms
+// Create paradigm tables and link words
+router.post('/admin/setup-paradigms', async (req, res) => {
+  try {
+    const database = await db.get();
+
+    const PARADIGMS = [
+      { code: 'Ρ10.1', name: 'Verb Class 10 Variant 1', type: 'verb' },
+      { code: 'Ρ10.10', name: 'Verb Class 10 Variant 10', type: 'verb' },
+      { code: 'Ρ2.1', name: 'Verb Class 2 Variant 1', type: 'verb' },
+      { code: 'Ρ5.2', name: 'Verb Class 5 Variant 2', type: 'verb' }
+    ];
+
+    // Create tables
+    await database.run(`CREATE TABLE IF NOT EXISTS paradigms (id INTEGER PRIMARY KEY, code TEXT UNIQUE, name TEXT, type TEXT)`);
+    await database.run(`CREATE TABLE IF NOT EXISTS paradigm_rules (id INTEGER PRIMARY KEY, paradigm_id INTEGER, tense TEXT, person TEXT, number TEXT, ending TEXT, example_form TEXT)`);
+    await database.run(`CREATE TABLE IF NOT EXISTS word_paradigm (id INTEGER PRIMARY KEY, word_id INTEGER UNIQUE, paradigm_id INTEGER)`);
+
+    // Insert paradigms
+    for (const p of PARADIGMS) {
+      await database.run('INSERT OR IGNORE INTO paradigms (code, name, type) VALUES (?, ?, ?)', [p.code, p.name, p.type]);
+    }
+
+    // Insert rules
+    const rules = [
+      ['Ρ10.1', 'present', '1st', 'singular', 'ώ', 'αγαπώ'],
+      ['Ρ10.1', 'present', '2nd', 'singular', 'άς', 'αγαπάς'],
+      ['Ρ10.1', 'present', '3rd', 'singular', 'ά', 'αγαπά'],
+      ['Ρ10.1', 'present', '1st', 'plural', 'ούμε', 'αγαπούμε'],
+      ['Ρ10.1', 'present', '2nd', 'plural', 'άτε', 'αγαπάτε'],
+      ['Ρ10.1', 'present', '3rd', 'plural', 'ούν', 'αγαπούν'],
+      ['Ρ10.10', 'present', '1st', 'singular', 'ώ', 'μπορώ'],
+      ['Ρ10.10', 'present', '2nd', 'singular', 'είς', 'μπορείς'],
+      ['Ρ10.10', 'present', '3rd', 'singular', 'εί', 'μπορεί'],
+      ['Ρ10.10', 'present', '1st', 'plural', 'ούμε', 'μπορούμε'],
+      ['Ρ10.10', 'present', '2nd', 'plural', 'είτε', 'μπορείτε'],
+      ['Ρ10.10', 'present', '3rd', 'plural', 'ούν', 'μπορούν'],
+      ['Ρ2.1', 'present', '1st', 'singular', 'ω', 'διαβάζω'],
+      ['Ρ2.1', 'present', '2nd', 'singular', 'εις', 'διαβάζεις'],
+      ['Ρ2.1', 'present', '3rd', 'singular', 'ει', 'διαβάζει'],
+      ['Ρ2.1', 'present', '1st', 'plural', 'ουμε', 'διαβάζουμε'],
+      ['Ρ2.1', 'present', '2nd', 'plural', 'ετε', 'διαβάζετε'],
+      ['Ρ2.1', 'present', '3rd', 'plural', 'ουν', 'διαβάζουν'],
+      ['Ρ5.2', 'present', '1st', 'singular', 'ω', 'δουλεύω'],
+      ['Ρ5.2', 'present', '2nd', 'singular', 'εις', 'δουλεύεις'],
+      ['Ρ5.2', 'present', '3rd', 'singular', 'ει', 'δουλεύει'],
+      ['Ρ5.2', 'present', '1st', 'plural', 'ουμε', 'δουλεύουμε'],
+      ['Ρ5.2', 'present', '2nd', 'plural', 'ετε', 'δουλεύετε'],
+      ['Ρ5.2', 'present', '3rd', 'plural', 'ουν', 'δουλεύουν']
+    ];
+
+    for (const [pcode, tense, person, number, ending, example] of rules) {
+      const p = await database.get('SELECT id FROM paradigms WHERE code = ?', [pcode]);
+      if (p) {
+        await database.run('INSERT INTO paradigm_rules (paradigm_id, tense, person, number, ending, example_form) VALUES (?, ?, ?, ?, ?, ?)',
+          [p.id, tense, person, number, ending, example]);
+      }
+    }
+
+    // Link words to paradigms
+    const links = [['αγαπώ', 'Ρ10.1'], ['μπορώ', 'Ρ10.10'], ['δουλεύω', 'Ρ5.2'], ['διαβάζω', 'Ρ2.1']];
+    for (const [lemma, pcode] of links) {
+      const word = await database.get('SELECT id FROM words WHERE el = ?', [lemma]);
+      const p = await database.get('SELECT id FROM paradigms WHERE code = ?', [pcode]);
+      if (word && p) {
+        await database.run('INSERT OR IGNORE INTO word_paradigm (word_id, paradigm_id) VALUES (?, ?)', [word.id, p.id]);
+      }
+    }
+
+    res.json({ success: true, message: 'Paradigms setup complete' });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 // POST /api/admin/import-lexicon
 // Temporary endpoint to import 50 words
 router.post('/admin/import-lexicon', async (req, res) => {

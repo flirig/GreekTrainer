@@ -398,16 +398,18 @@ router.post('/admin/setup-paradigms', async (req, res) => {
       { code: 'Ρ5.2', name: 'Verb Class 5 Variant 2', type: 'verb' }
     ];
 
-    // Create tables
-    await database.run(`CREATE TABLE IF NOT EXISTS paradigms (id INTEGER PRIMARY KEY, code TEXT UNIQUE, name TEXT, type TEXT)`);
-    await database.run(`CREATE TABLE IF NOT EXISTS paradigm_rules (id INTEGER PRIMARY KEY, paradigm_id INTEGER, tense TEXT, person TEXT, number TEXT, ending TEXT, example_form TEXT)`);
-    await database.run(`CREATE TABLE IF NOT EXISTS word_paradigm (id INTEGER PRIMARY KEY, word_id INTEGER UNIQUE, paradigm_id INTEGER)`);
+    // Create tables (PostgreSQL compatible)
+    await database.run(`CREATE TABLE IF NOT EXISTS paradigms (id SERIAL PRIMARY KEY, code TEXT UNIQUE, name TEXT, type TEXT)`);
+    await database.run(`CREATE TABLE IF NOT EXISTS paradigm_rules (id SERIAL PRIMARY KEY, paradigm_id INTEGER, tense TEXT, person TEXT, number TEXT, ending TEXT, example_form TEXT)`);
+    await database.run(`CREATE TABLE IF NOT EXISTS word_paradigm (id SERIAL PRIMARY KEY, word_id INTEGER UNIQUE, paradigm_id INTEGER)`);
 
-    // Insert paradigms
+    // Insert paradigms (let DB auto-generate ID)
     for (const p of PARADIGMS) {
       try {
         await database.run('INSERT INTO paradigms (code, name, type) VALUES (?, ?, ?)', [p.code, p.name, p.type]);
-      } catch (e) {} // Ignore duplicates
+      } catch (e) {
+        // Paradigm already exists, OK
+      }
     }
 
     // Insert rules

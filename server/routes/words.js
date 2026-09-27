@@ -389,22 +389,30 @@ router.post('/analyze', async (req, res) => {
 // Temporary endpoint to import 50 words
 router.post('/admin/import-lexicon', async (req, res) => {
   try {
-    const fs = await import('fs');
-    const path = await import('path');
-    const { fileURLToPath } = await import('url');
-    const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-    const lexiconPath = path.join(__dirname, '../../data/greek-lexicon-parsed.json');
-    const data = JSON.parse(fs.readFileSync(lexiconPath, 'utf8'));
+    const WORDS = [
+      {el:'αγαπώ',ru:'to love'},{el:'μπορώ',ru:'can'},{el:'δουλεύω',ru:'to work'},{el:'διαβάζω',ru:'to read'},
+      {el:'γράφω',ru:'to write'},{el:'ακούω',ru:'to listen'},{el:'βλέπω',ru:'to see'},{el:'έρχομαι',ru:'to come'},
+      {el:'πηγαίνω',ru:'to go'},{el:'θέλω',ru:'to want'},{el:'κάνω',ru:'to do/make'},{el:'δίνω',ru:'to give'},
+      {el:'παίρνω',ru:'to take'},{el:'βρίσκω',ru:'to find'},{el:'ξέρω',ru:'to know'},{el:'λέω',ru:'to say'},
+      {el:'έχω',ru:'to have'},{el:'είμαι',ru:'to be'},{el:'τρώω',ru:'to eat'},{el:'πίνω',ru:'to drink'},
+      {el:'κοιμάμαι',ru:'to sleep'},{el:'τρέχω',ru:'to run'},{el:'περπατώ',ru:'to walk'},{el:'βαδίζω',ru:'to walk'},
+      {el:'πηδώ',ru:'to jump'},{el:'χορεύω',ru:'to dance'},{el:'τραγουδώ',ru:'to sing'},{el:'μουσικός',ru:'musician'},
+      {el:'χρώμα',ru:'color'},{el:'μάτι',ru:'eye'},{el:'αυτί',ru:'ear'},{el:'στόμα',ru:'mouth'},
+      {el:'δόντι',ru:'tooth'},{el:'μαλλί',ru:'hair'},{el:'χέρι',ru:'hand'},{el:'πόδι',ru:'foot'},
+      {el:'κεφάλι',ru:'head'},{el:'καρδιά',ru:'heart'},{el:'άσπρο',ru:'white'},{el:'μαύρο',ru:'black'},
+      {el:'κόκκινο',ru:'red'},{el:'μπλε',ru:'blue'},{el:'πράσινο',ru:'green'},{el:'κίτρινο',ru:'yellow'},
+      {el:'πορτοκαλί',ru:'orange'},{el:'ιώδες',ru:'purple'},{el:'ροζ',ru:'pink'},{el:'γκρι',ru:'gray'},
+      {el:'καφέ',ru:'brown'},{el:'ήλιος',ru:'sun'},{el:'φεγγάρι',ru:'moon'}
+    ];
 
     const database = await db.get();
     let imported = 0;
 
-    for (const word of data) {
+    for (const word of WORDS) {
       try {
         await database.run(
           'INSERT INTO words (el, ru) VALUES (?, ?) ON CONFLICT DO NOTHING',
-          [word.el, word.ru || 'translation needed']
+          [word.el, word.ru]
         );
         imported++;
       } catch(e) {}

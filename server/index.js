@@ -49,6 +49,11 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(join(__dirname, '../public/dashboard.html'));
 });
 
+// Word Explorer
+app.get('/explorer', (req, res) => {
+  res.sendFile(join(__dirname, '../public/word-explorer.html'));
+});
+
 // API Routes
 app.get('/api', (req, res) => {
   res.json({

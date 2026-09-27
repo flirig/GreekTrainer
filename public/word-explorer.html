@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Explorer - Greek Trainer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      color: #333;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    .header {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    h1 { font-size: 28px; margin-bottom: 20px; }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .search-box input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    .search-box button {
+      padding: 12px 24px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .search-box button:hover { background: #1976D2; }
+
+    .word-card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .word-header {
+      display: flex;
+      align-items: baseline;
+      gap: 20px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #f0f0f0;
+      padding-bottom: 15px;
+    }
+
+    .lemma {
+      font-size: 32px;
+      font-weight: bold;
+      color: #2196F3;
+    }
+
+    .translation {
+      font-size: 18px;
+      color: #666;
+    }
+
+    .paradigm-badge {
+      display: inline-block;
+      background: #E3F2FD;
+      color: #1976D2;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .conjugation-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .conjugation-table th {
+      background: #f5f5f5;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      border: 1px solid #ddd;
+    }
+
+    .conjugation-table td {
+      padding: 12px;
+      border: 1px solid #ddd;
+    }
+
+    .conjugation-table tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    .form {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2196F3;
+    }
+
+    .person { color: #666; }
+    .number { color: #999; font-size: 14px; }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+
+    .error {
+      background: #FFEBEE;
+      color: #C62828;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+
+    .words-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .word-btn {
+      padding: 10px;
+      background: #E3F2FD;
+      border: 1px solid #2196F3;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #1976D2;
+      transition: all 0.2s;
+    }
+
+    .word-btn:hover {
+      background: #2196F3;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🏛️ Word Explorer</h1>
+      <p>Explore Greek word forms and conjugations</p>
+
+      <div class="search-box">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Enter Greek word (e.g., αγαπώ)"
+          autocomplete="off"
+        >
+        <button onclick="searchWord()">Search</button>
+      </div>
+
+      <div class="words-list" id="wordsList"></div>
+    </div>
+
+    <div id="content"></div>
+  </div>
+
+  <script>
+    const API_URL = '/api';
+    const SAMPLE_WORDS = ['αγαπώ', 'μπορώ', 'δουλεύω', 'διαβάζω'];
+
+    // Load sample words
+    async function loadSampleWords() {
+      const list = document.getElementById('wordsList');
+      list.innerHTML = SAMPLE_WORDS.map(word =>
+        `<button class="word-btn" onclick="exploreWord('${word}')">${word}</button>`
+      ).join('');
+    }
+
+    async function exploreWord(lemma) {
+      const content = document.getElementById('content');
+      content.innerHTML = '<div class="loading">Loading...</div>';
+
+      try {
+        // Get word info
+        const wordRes = await fetch(`${API_URL}/words`);
+        const words = await wordRes.json();
+        const word = words.find(w => w.el === lemma);
+
+        if (!word) {
+          content.innerHTML = `<div class="error">Word not found: ${lemma}</div>`;
+          return;
+        }
+
+        // Generate conjugation table
+        const persons = [
+          { label: '1st singular', person: '1st', number: 'singular' },
+          { label: '2nd singular', person: '2nd', number: 'singular' },
+          { label: '3rd singular', person: '3rd', number: 'singular' },
+          { label: '1st plural', person: '1st', number: 'plural' },
+          { label: '2nd plural', person: '2nd', number: 'plural' },
+          { label: '3rd plural', person: '3rd', number: 'plural' }
+        ];
+
+        let rows = '';
+        for (const p of persons) {
+          try {
+            const synthesizeRes = await fetch(`${API_URL}/words/synthesize`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                lemma: lemma,
+                tense: 'present',
+                person: p.person,
+                number: p.number
+              })
+            });
+
+            const result = await synthesizeRes.json();
+            const form = result.success ? result.form : '—';
+
+            rows += `
+              <tr>
+                <td class="person">${p.label}</td>
+                <td class="number">${p.number}</td>
+                <td class="form">${form}</td>
+              </tr>
+            `;
+          } catch (e) {
+            rows += `
+              <tr>
+                <td class="person">${p.label}</td>
+                <td class="number">${p.number}</td>
+                <td>—</td>
+              </tr>
+            `;
+          }
+        }
+
+        content.innerHTML = `
+          <div class="word-card">
+            <div class="word-header">
+              <div>
+                <div class="lemma">${lemma}</div>
+                <div class="translation">${word.ru || 'translation'}</div>
+              </div>
+              <span class="paradigm-badge">Present Tense</span>
+            </div>
+
+            <table class="conjugation-table">
+              <thead>
+                <tr>
+                  <th>Person</th>
+                  <th>Number</th>
+                  <th>Form</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows}
+              </tbody>
+            </table>
+          </div>
+        `;
+      } catch (error) {
+        content.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+      }
+    }
+
+    function searchWord() {
+      const input = document.getElementById('searchInput');
+      const word = input.value.trim();
+      if (word) {
+        exploreWord(word);
+      }
+    }
+
+    // Allow Enter key
+    document.getElementById('searchInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') searchWord();
+    });
+
+    // Load on page load
+    loadSampleWords();
+  </script>
+</body>
+</html>

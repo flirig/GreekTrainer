@@ -447,17 +447,23 @@ router.post('/admin/setup-paradigms', async (req, res) => {
 
     // Link words to paradigms
     const links = [['αγαπώ', 'Ρ10.1'], ['μπορώ', 'Ρ10.10'], ['δουλεύω', 'Ρ5.2'], ['διαβάζω', 'Ρ2.1']];
+    let linked = 0;
     for (const [lemma, pcode] of links) {
       const word = await database.get('SELECT id FROM words WHERE el = ?', [lemma]);
       const p = await database.get('SELECT id FROM paradigms WHERE code = ?', [pcode]);
       if (word && p) {
         try {
           await database.run('INSERT INTO word_paradigm (word_id, paradigm_id) VALUES (?, ?)', [word.id, p.id]);
-        } catch (e) {} // Ignore duplicates
+          linked++;
+        } catch (e) {
+          console.log(`Link ${lemma}→${pcode} failed: ${e.message}`);
+        }
+      } else {
+        console.log(`Cannot link ${lemma}→${pcode}: word=${word ? word.id : 'null'}, paradigm=${p ? p.id : 'null'}`);
       }
     }
 
-    res.json({ success: true, message: 'Paradigms setup complete' });
+    res.json({ success: true, message: `Paradigms setup complete, linked: ${linked}` });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }

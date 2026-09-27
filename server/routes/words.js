@@ -405,7 +405,7 @@ router.post('/admin/setup-paradigms', async (req, res) => {
 
     // Insert paradigms
     for (const p of PARADIGMS) {
-      await database.run('INSERT OR IGNORE INTO paradigms (code, name, type) VALUES (?, ?, ?)', [p.code, p.name, p.type]);
+      await database.run('INSERT INTO paradigms (code, name, type) VALUES (?, ?, ?) ON CONFLICT (code) DO NOTHING', [p.code, p.name, p.type]);
     }
 
     // Insert rules
@@ -450,7 +450,7 @@ router.post('/admin/setup-paradigms', async (req, res) => {
       const word = await database.get('SELECT id FROM words WHERE el = ?', [lemma]);
       const p = await database.get('SELECT id FROM paradigms WHERE code = ?', [pcode]);
       if (word && p) {
-        await database.run('INSERT OR IGNORE INTO word_paradigm (word_id, paradigm_id) VALUES (?, ?)', [word.id, p.id]);
+        await database.run('INSERT INTO word_paradigm (word_id, paradigm_id) VALUES (?, ?) ON CONFLICT (word_id) DO NOTHING', [word.id, p.id]);
       }
     }
 

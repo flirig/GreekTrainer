@@ -1,0 +1,452 @@
+{
+  "είμαι": {
+    "word": "είμαι",
+    "lemma": "είμαι",
+    "paradigmCode": null,
+    "pronunciation": "íme",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:41:25.912Z"
+  },
+  "έχω": {
+    "word": "έχω",
+    "lemma": "έχω",
+    "paradigmCode": null,
+    "pronunciation": "éxo",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:41:29.576Z"
+  },
+  "κάνω": {
+    "word": "κάνω",
+    "lemma": "κάνω",
+    "paradigmCode": null,
+    "pronunciation": "káno",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:41:35.025Z"
+  },
+  "πηγαίνω": {
+    "word": "πηγαίνω",
+    "lemma": "πηγαίνω",
+    "paradigmCode": null,
+    "pronunciation": "pijéno",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:41:38.014Z"
+  },
+  "λέω": {
+    "word": "λέω",
+    "lemma": "λέω",
+    "paradigmCode": null,
+    "pronunciation": "léo",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:41:43.263Z"
+  },
+  "δίνω": {
+    "word": "δίνω",
+    "lemma": "δίνω",
+    "paradigmCode": null,
+    "pronunciation": "δíno",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:41:46.445Z"
+  },
+  "βρίσκω": {
+    "word": "βρίσκω",
+    "lemma": "βρίσκω",
+    "paradigmCode": null,
+    "pronunciation": "vrísko",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:41:50.359Z"
+  },
+  "ξέρω": {
+    "word": "ξέρω",
+    "lemma": "ξέρω",
+    "paradigmCode": null,
+    "pronunciation": "kséro",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:41:54.193Z"
+  },
+  "θέλω": {
+    "word": "θέλω",
+    "lemma": "θέλω",
+    "paradigmCode": null,
+    "pronunciation": "θélo",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:41:57.189Z"
+  },
+  "μπορώ": {
+    "word": "μπορώ",
+    "lemma": "μπορώ",
+    "paradigmCode": "Ρ10.10",
+    "pronunciation": "boró",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:42:00.145Z"
+  },
+  "μένω": {
+    "word": "μένω",
+    "lemma": "μένω",
+    "paradigmCode": null,
+    "pronunciation": "méno",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:42:03.291Z"
+  },
+  "έρχομαι": {
+    "word": "έρχομαι",
+    "lemma": "έρχομαι",
+    "paradigmCode": null,
+    "pronunciation": "érxome",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:42:08.636Z"
+  },
+  "δουλεύω": {
+    "word": "δουλεύω",
+    "lemma": "δουλεύω",
+    "paradigmCode": "Ρ5.2",
+    "pronunciation": "δulévo",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:42:12.143Z"
+  },
+  "αγαπώ": {
+    "word": "αγαπώ",
+    "lemma": "αγαπώ",
+    "paradigmCode": "Ρ10.1",
+    "pronunciation": "aγapó",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:42:16.445Z"
+  },
+  "ακούω": {
+    "word": "ακούω",
+    "lemma": "ακούω",
+    "paradigmCode": null,
+    "pronunciation": "akúo",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:42:20.635Z"
+  },
+  "βλέπω": {
+    "word": "βλέπω",
+    "lemma": "βλέπω",
+    "paradigmCode": null,
+    "pronunciation": "vlépo",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:42:23.818Z"
+  },
+  "γράφω": {
+    "word": "γράφω",
+    "lemma": "γράφω",
+    "paradigmCode": null,
+    "pronunciation": "γráfo",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:42:26.268Z"
+  },
+  "διαβάζω": {
+    "word": "διαβάζω",
+    "lemma": "διαβάζω",
+    "paradigmCode": "Ρ2.1",
+    "pronunciation": "δjavázo",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:42:28.726Z"
+  },
+  "τρώω": {
+    "word": "τρώω",
+    "lemma": "τρώω",
+    "paradigmCode": null,
+    "pronunciation": "tróo",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:59:51.813Z"
+  },
+  "πίνω": {
+    "word": "πίνω",
+    "lemma": "πίνω",
+    "paradigmCode": null,
+    "pronunciation": "píno",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T17:59:57.483Z"
+  },
+  "άνθρωπος": {
+    "word": "άνθρωπος",
+    "lemma": "άνθρωπος",
+    "paradigmCode": null,
+    "pronunciation": "ánθropos",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:00:00.288Z"
+  },
+  "γυναίκα": {
+    "word": "γυναίκα",
+    "lemma": "γυναίκα",
+    "paradigmCode": null,
+    "pronunciation": "jinéka",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:00:02.723Z"
+  },
+  "άντρας": {
+    "word": "άντρας",
+    "lemma": "άντρας",
+    "paradigmCode": null,
+    "pronunciation": "ándras",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:00:06.853Z"
+  },
+  "παιδί": {
+    "word": "παιδί",
+    "lemma": "παΐδι",
+    "paradigmCode": null,
+    "pronunciation": "paíδi",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:00:10.044Z"
+  },
+  "μάνα": {
+    "word": "μάνα",
+    "lemma": "μάνα",
+    "paradigmCode": null,
+    "pronunciation": "mána",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:00:13.090Z"
+  },
+  "πατέρας": {
+    "word": "πατέρας",
+    "lemma": "πατέρας",
+    "paradigmCode": null,
+    "pronunciation": "patéras",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:00:17.672Z"
+  },
+  "αδελφός": {
+    "word": "αδελφός",
+    "lemma": "αδελφός",
+    "paradigmCode": null,
+    "pronunciation": "aδelfós",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:00:20.521Z"
+  },
+  "αδελφή": {
+    "word": "αδελφή",
+    "lemma": "αδελφός",
+    "paradigmCode": null,
+    "pronunciation": "aδelfós",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:00:23.466Z"
+  },
+  "φίλος": {
+    "word": "φίλος",
+    "lemma": "φίλος",
+    "paradigmCode": null,
+    "pronunciation": "fílos",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:00:26.769Z"
+  },
+  "δάσκαλος": {
+    "word": "δάσκαλος",
+    "lemma": "δάσκαλος",
+    "paradigmCode": null,
+    "pronunciation": "δáskalos",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:00:30.915Z"
+  },
+  "σπίτι": {
+    "word": "σπίτι",
+    "lemma": "σπίτι",
+    "paradigmCode": null,
+    "pronunciation": "spíti",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:00:34.675Z"
+  },
+  "δρόμος": {
+    "word": "δρόμος",
+    "lemma": "δρόμος",
+    "paradigmCode": null,
+    "pronunciation": "δrómos",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:00:38.549Z"
+  },
+  "πόλη": {
+    "word": "πόλη",
+    "lemma": "Πόλη",
+    "paradigmCode": null,
+    "pronunciation": "póli",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:00:42.504Z"
+  },
+  "χώρα": {
+    "word": "χώρα",
+    "lemma": "χώρα",
+    "paradigmCode": null,
+    "pronunciation": "xóra",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:00:48.074Z"
+  },
+  "ημέρα": {
+    "word": "ημέρα",
+    "lemma": "ημέρα",
+    "paradigmCode": null,
+    "pronunciation": "iméra",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:00:51.032Z"
+  },
+  "νύχτα": {
+    "word": "νύχτα",
+    "lemma": "νύχτα",
+    "paradigmCode": null,
+    "pronunciation": "níxta",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:00:54.164Z"
+  },
+  "ώρα": {
+    "word": "ώρα",
+    "lemma": "ώρα",
+    "paradigmCode": null,
+    "pronunciation": "óra",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:00:57.184Z"
+  },
+  "χρόνος": {
+    "word": "χρόνος",
+    "lemma": "χρόνος",
+    "paradigmCode": null,
+    "pronunciation": "xrónos",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:01:00.863Z"
+  },
+  "έτος": {
+    "word": "έτος",
+    "lemma": "έτος",
+    "paradigmCode": null,
+    "pronunciation": "étos",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:01:04.549Z"
+  },
+  "κόσμος": {
+    "word": "κόσμος",
+    "lemma": "κόσμος",
+    "paradigmCode": null,
+    "pronunciation": "kózmos",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:01:08.826Z"
+  },
+  "καλός": {
+    "word": "καλός",
+    "lemma": "κάλος",
+    "paradigmCode": null,
+    "pronunciation": "kálos",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:01:13.010Z"
+  },
+  "μεγάλος": {
+    "word": "μεγάλος",
+    "lemma": "μεγάλος -η -ο",
+    "paradigmCode": null,
+    "pronunciation": "meγálos",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:01:18.256Z"
+  },
+  "μικρός": {
+    "word": "μικρός",
+    "lemma": "μικρός -ή -ό",
+    "paradigmCode": null,
+    "pronunciation": "mikrós",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:01:21.344Z"
+  },
+  "νέος": {
+    "word": "νέος",
+    "lemma": "νέος -α -ο",
+    "paradigmCode": null,
+    "pronunciation": "néos",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:01:26.359Z"
+  },
+  "παλιός": {
+    "word": "παλιός",
+    "lemma": "παλιός -ά -ό",
+    "paradigmCode": null,
+    "pronunciation": "palós",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:01:29.186Z"
+  },
+  "όμορφος": {
+    "word": "όμορφος",
+    "lemma": "όμορφος -η -ο",
+    "paradigmCode": null,
+    "pronunciation": "ómorfos",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:01:32.836Z"
+  },
+  "άσχημος": {
+    "word": "άσχημος",
+    "lemma": "άσχημος -η -ο",
+    "paradigmCode": null,
+    "pronunciation": "ásximos",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:01:36.645Z"
+  },
+  "κόκκινος": {
+    "word": "κόκκινος",
+    "lemma": "κόκκινος -η -ο",
+    "paradigmCode": null,
+    "pronunciation": "kókinos",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:01:39.887Z"
+  },
+  "μαύρος": {
+    "word": "μαύρος",
+    "lemma": "μαύρος",
+    "paradigmCode": null,
+    "pronunciation": "mávros",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:01:42.318Z"
+  },
+  "λευκός": {
+    "word": "λευκός",
+    "lemma": "λευκός -ή -ό",
+    "paradigmCode": null,
+    "pronunciation": "lefkós",
+    "flexibleForms": [],
+    "definition": "N/A",
+    "timestamp": "2026-09-26T18:01:44.873Z"
+  }
+}

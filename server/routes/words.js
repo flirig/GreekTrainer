@@ -141,12 +141,10 @@ router.delete('/:id', verifyToken, requireAdmin, async (req, res) => {
 // MORPHOLOGICAL API (NEW)
 // ============================================
 
-// Cache for paradigm rules (load once at startup)
+// Cache for paradigm rules (reload each time)
 let PARADIGM_CACHE = {};
-let CACHE_LOADED = false;
 
 async function loadParadigmCache() {
-  if (CACHE_LOADED) return;
 
   try {
     const database = await db.get();
@@ -183,7 +181,6 @@ async function loadParadigmCache() {
       PARADIGM_CACHE[r.paradigm_code].push(r);
     });
 
-    CACHE_LOADED = true;
     console.log('✅ Paradigm cache loaded:', Object.keys(PARADIGM_CACHE).length, 'paradigms');
   } catch (e) {
     console.error('❌ Failed to load paradigm cache:', e.message);

@@ -54,6 +54,11 @@ app.get('/explorer', (req, res) => {
   res.sendFile(join(__dirname, '../public/word-explorer.html'));
 });
 
+// Exercise Loop (New UI)
+app.get('/loop', (req, res) => {
+  res.sendFile(join(__dirname, '../public/exercise-loop.html'));
+});
+
 // API Routes
 app.get('/api', (req, res) => {
   res.json({
